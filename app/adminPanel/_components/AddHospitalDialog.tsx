@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     Dialog,
     DialogContent,
@@ -10,12 +11,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Select,
@@ -24,37 +21,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { departmentsList } from "@/constants"
+import { HospitalFormData } from "@/types"
 import { PlusCircle } from "lucide-react"
-
-interface HospitalFormData {
-    name: string
-    registrationNumber: string
-    type: string
-    address: string
-    city: string
-    state: string
-    pincode: string
-    phone: string
-    email: string
-    website: string
-    numberOfBeds: string
-    icuBeds: string
-    oxygenCylinders: string
-    ventilators: string
-    ambulances: string
-    hasXray: boolean
-    hasMRI: boolean
-    hasUltrasound: boolean
-    hasCTScan: boolean
-    hasPathologyLab: boolean
-    hasBloodBank: boolean
-    hasPharmacy: boolean
-    departments: string[]
-    operatingHours: string
-    emergencyAvailable: boolean
-    description: string
-}
+import { useState } from "react"
 
 const initialFormData: HospitalFormData = {
     name: "",
@@ -84,29 +57,6 @@ const initialFormData: HospitalFormData = {
     emergencyAvailable: false,
     description: "",
 }
-
-const departmentsList = [
-    "OPD (Outpatient)",
-    "ENT",
-    "Operation Theatres (OT)",
-    "ICU",
-    "Emergency / Trauma",
-    "Cardiology",
-    "Neurology",
-    "Orthopedics",
-    "Pediatrics",
-    "Gynecology & Obstetrics",
-    "Dermatology",
-    "Ophthalmology",
-    "Radiology",
-    "Oncology",
-    "Urology",
-    "Nephrology",
-    "Psychiatry",
-    "General Surgery",
-    "Dental",
-    "Physiotherapy",
-]
 
 const AddHospitalDialog = () => {
     const [formData, setFormData] = useState<HospitalFormData>(initialFormData)
@@ -190,8 +140,11 @@ const AddHospitalDialog = () => {
                                     <Label className="text-green-800">Hospital Type *</Label>
                                     <Select
                                         value={formData.type}
-                                        onValueChange={(val) => updateField("type", val)}
-                                    >
+                                        onValueChange={(val) => {
+                                            if (val !== null) {
+                                                updateField("type", val);
+                                            }
+                                        }}                                    >
                                         <SelectTrigger className="w-full border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30">
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
@@ -210,8 +163,11 @@ const AddHospitalDialog = () => {
                                     <Label className="text-green-800">Operating Hours</Label>
                                     <Select
                                         value={formData.operatingHours}
-                                        onValueChange={(val) => updateField("operatingHours", val)}
-                                    >
+                                        onValueChange={(val) => {
+                                            if (val !== null) {
+                                                updateField("operatingHours", val);
+                                            }
+                                        }}                                    >
                                         <SelectTrigger className="w-full border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30">
                                             <SelectValue placeholder="Select hours" />
                                         </SelectTrigger>

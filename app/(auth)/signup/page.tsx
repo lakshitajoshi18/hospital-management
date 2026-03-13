@@ -32,53 +32,9 @@ import {
     CheckCircle2,
     XCircle,
 } from "lucide-react"
+import { hospitals, qualifications, specializations } from "@/constants"
 
-// Replace with actual hospital data from your backend
-const hospitals = [
-    "City General Hospital",
-    "Apollo Medical Center",
-    "Green Valley Hospital",
-    "Sunrise Health Clinic",
-    "National Institute of Medical Sciences",
-    "Metro Multispecialty Hospital",
-]
-
-const specializations = [
-    "General Physician",
-    "Cardiologist",
-    "Neurologist",
-    "Orthopedic Surgeon",
-    "Pediatrician",
-    "Gynecologist",
-    "Dermatologist",
-    "Ophthalmologist",
-    "ENT Specialist",
-    "Oncologist",
-    "Urologist",
-    "Nephrologist",
-    "Psychiatrist",
-    "Radiologist",
-    "Anesthesiologist",
-    "Pulmonologist",
-    "Gastroenterologist",
-    "Dentist",
-    "Physiotherapist",
-]
-
-const qualifications = [
-    "MBBS",
-    "MD",
-    "MS",
-    "BDS",
-    "MDS",
-    "BAMS",
-    "BHMS",
-    "DNB",
-    "DM",
-    "MCh",
-    "FRCS",
-    "MRCP",
-]
+import bcrypt from "bcryptjs";
 
 function getPasswordStrength(password: string) {
     let score = 0
@@ -109,32 +65,52 @@ const passwordRules = [
 const inputClass =
     "border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
 
-const SignupPage = () => {
-    const [name, setName] = useState("")
-    const [hospital, setHospital] = useState("")
-    const [experience, setExperience] = useState("")
-    const [specialization, setSpecialization] = useState("")
-    const [qualification, setQualification] = useState("")
-    const [phone, setPhone] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirm, setShowConfirm] = useState(false)
+type SignupFormState = {
+    name: string
+    hospital: string
+    experience: string
+    specialization: string
+    qualification: string
+    phone: string
+    password: string
+    confirmPassword: string
+    showPassword: boolean
+    showConfirm: boolean
+}
 
-    const strength = useMemo(() => getPasswordStrength(password), [password])
-    const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
+const SignupPage = () => {
+    const [form, setForm] = useState<SignupFormState>({
+        name: "",
+        hospital: "",
+        experience: "",
+        specialization: "",
+        qualification: "",
+        phone: "",
+        password: "",
+        confirmPassword: "",
+        showPassword: false,
+        showConfirm: false,
+    })
+
+    const strength = useMemo(() => getPasswordStrength(form.password), [form.password])
+    const passwordsMatch =
+        form.confirmPassword.length > 0 && form.password === form.confirmPassword
 
     const handleSignup = (e: React.FormEvent) => {
         e.preventDefault()
         console.log("Signup data:", {
-            name,
-            hospital,
-            experience,
-            specialization,
-            qualification,
-            phone,
-            password,
+            name: form.name,
+            hospital: form.hospital,
+            experience: form.experience,
+            specialization: form.specialization,
+            qualification: form.qualification,
+            phone: form.phone,
+            password: form.password,
         })
+
+        const hashedPassword = bcrypt.hashSync(form.password, 10)
+        console.log(hashedPassword)
+
     }
 
     return (
@@ -157,7 +133,7 @@ const SignupPage = () => {
                 </CardHeader>
 
                 <CardContent>
-                    <ScrollArea className="max-h-[calc(100vh-280px)]">
+                    <ScrollArea className="max-h-[calc(100vh-180px)]">
                         <form onSubmit={handleSignup} className="space-y-4 pr-3">
                             {/* Full Name */}
                             <div className="space-y-1.5">
@@ -169,8 +145,13 @@ const SignupPage = () => {
                                     <Input
                                         id="name"
                                         placeholder="Dr. John Doe"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
+                                        value={form.name}
+                                        onChange={(e) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                name: e.target.value,
+                                            }))
+                                        }
                                         className={`pl-10 ${inputClass}`}
                                         required
                                     />
@@ -184,8 +165,14 @@ const SignupPage = () => {
                                     <div className="relative">
                                         <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500 z-10" />
                                         <Select
-                                            value={hospital}
-                                            onValueChange={(val) => val && setHospital(val)}
+                                            value={form.hospital}
+                                            onValueChange={(val) =>
+                                                val &&
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    hospital: val,
+                                                }))
+                                            }
                                         >
                                             <SelectTrigger className={`w-full pl-10 ${inputClass}`}>
                                                 <SelectValue placeholder="Select hospital" />
@@ -213,8 +200,13 @@ const SignupPage = () => {
                                             min="0"
                                             max="60"
                                             placeholder="e.g. 5"
-                                            value={experience}
-                                            onChange={(e) => setExperience(e.target.value)}
+                                            value={form.experience}
+                                            onChange={(e) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    experience: e.target.value,
+                                                }))
+                                            }
                                             className={`pl-10 ${inputClass}`}
                                             required
                                         />
@@ -227,8 +219,14 @@ const SignupPage = () => {
                                 <div className="space-y-1.5">
                                     <Label className="text-green-800">Specialization *</Label>
                                     <Select
-                                        value={specialization}
-                                        onValueChange={(val) => val && setSpecialization(val)}
+                                        value={form.specialization}
+                                        onValueChange={(val) =>
+                                            val &&
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                specialization: val,
+                                            }))
+                                        }
                                     >
                                         <SelectTrigger className={`w-full ${inputClass}`}>
                                             <SelectValue placeholder="Select specialization" />
@@ -248,8 +246,14 @@ const SignupPage = () => {
                                     <div className="relative">
                                         <GraduationCap className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500 z-10" />
                                         <Select
-                                            value={qualification}
-                                            onValueChange={(val) => val && setQualification(val)}
+                                            value={form.qualification}
+                                            onValueChange={(val) =>
+                                                val &&
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    qualification: val,
+                                                }))
+                                            }
                                         >
                                             <SelectTrigger className={`w-full pl-10 ${inputClass}`}>
                                                 <SelectValue placeholder="Select qualification" />
@@ -278,8 +282,13 @@ const SignupPage = () => {
                                         type="tel"
                                         inputMode="numeric"
                                         placeholder="+91 XXXXX XXXXX"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
+                                        value={form.phone}
+                                        onChange={(e) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                phone: e.target.value,
+                                            }))
+                                        }
                                         className={`pl-10 ${inputClass}`}
                                         required
                                     />
@@ -295,20 +304,34 @@ const SignupPage = () => {
                                     <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
                                     <Input
                                         id="password"
-                                        type={showPassword ? "text" : "password"}
+                                        type={form.showPassword ? "text" : "password"}
                                         placeholder="Create a strong password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        value={form.password}
+                                        onChange={(e) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                password: e.target.value,
+                                            }))
+                                        }
                                         className={`pl-10 pr-10 ${inputClass}`}
                                         required
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => setShowPassword((v) => !v)}
+                                        onClick={() =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                showPassword: !prev.showPassword,
+                                            }))
+                                        }
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 hover:text-green-700"
-                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                        aria-label={
+                                            form.showPassword
+                                                ? "Hide password"
+                                                : "Show password"
+                                        }
                                     >
-                                        {showPassword ? (
+                                        {form.showPassword ? (
                                             <EyeOff className="size-4" />
                                         ) : (
                                             <Eye className="size-4" />
@@ -317,16 +340,16 @@ const SignupPage = () => {
                                 </div>
 
                                 {/* Password strength bar */}
-                                {password.length > 0 && (
+                                {form.password.length > 0 && (
                                     <div className="space-y-2 pt-1">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-green-700">Password strength</span>
                                             <span
                                                 className={`font-semibold ${strength.label === "Weak"
-                                                        ? "text-red-600"
-                                                        : strength.label === "Fair"
-                                                            ? "text-yellow-600"
-                                                            : "text-green-700"
+                                                    ? "text-red-600"
+                                                    : strength.label === "Fair"
+                                                        ? "text-yellow-600"
+                                                        : "text-green-700"
                                                     }`}
                                             >
                                                 {strength.label}
@@ -340,7 +363,7 @@ const SignupPage = () => {
                                         </div>
                                         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 pt-1">
                                             {passwordRules.map((rule) => {
-                                                const passed = rule.test(password)
+                                                const passed = rule.test(form.password)
                                                 return (
                                                     <li
                                                         key={rule.label}
@@ -370,30 +393,44 @@ const SignupPage = () => {
                                     <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
                                     <Input
                                         id="confirm-password"
-                                        type={showConfirm ? "text" : "password"}
+                                        type={form.showConfirm ? "text" : "password"}
                                         placeholder="Re-enter your password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className={`pl-10 pr-10 ${inputClass} ${confirmPassword.length > 0 && !passwordsMatch
-                                                ? "border-red-400 focus-visible:border-red-500 focus-visible:ring-red-500/30"
-                                                : ""
+                                        value={form.confirmPassword}
+                                        onChange={(e) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                confirmPassword: e.target.value,
+                                            }))
+                                        }
+                                        className={`pl-10 pr-10 ${inputClass} ${form.confirmPassword.length > 0 && !passwordsMatch
+                                            ? "border-red-400 focus-visible:border-red-500 focus-visible:ring-red-500/30"
+                                            : ""
                                             }`}
                                         required
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => setShowConfirm((v) => !v)}
+                                        onClick={() =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                showConfirm: !prev.showConfirm,
+                                            }))
+                                        }
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 hover:text-green-700"
-                                        aria-label={showConfirm ? "Hide password" : "Show password"}
+                                        aria-label={
+                                            form.showConfirm
+                                                ? "Hide password"
+                                                : "Show password"
+                                        }
                                     >
-                                        {showConfirm ? (
+                                        {form.showConfirm ? (
                                             <EyeOff className="size-4" />
                                         ) : (
                                             <Eye className="size-4" />
                                         )}
                                     </button>
                                 </div>
-                                {confirmPassword.length > 0 && (
+                                {form.confirmPassword.length > 0 && (
                                     <p
                                         className={`text-xs flex items-center gap-1 ${passwordsMatch ? "text-green-600" : "text-red-500"
                                             }`}
