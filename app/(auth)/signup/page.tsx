@@ -35,6 +35,7 @@ import {
 import { hospitals, qualifications, specializations } from "@/constants"
 
 import bcrypt from "bcryptjs";
+import Link from "next/link"
 
 function getPasswordStrength(password: string) {
     let score = 0
@@ -47,8 +48,8 @@ function getPasswordStrength(password: string) {
 
     if (score <= 2) return { label: "Weak", percent: 25, color: "bg-red-500" }
     if (score <= 3) return { label: "Fair", percent: 50, color: "bg-yellow-500" }
-    if (score <= 4) return { label: "Good", percent: 75, color: "bg-green-400" }
-    return { label: "Strong", percent: 100, color: "bg-green-600" }
+    if (score <= 4) return { label: "Good", percent: 75, color: "bg-cyan-400" }
+    return { label: "Strong", percent: 100, color: "bg-cyan-600" }
 }
 
 const passwordRules = [
@@ -63,7 +64,7 @@ const passwordRules = [
 ]
 
 const inputClass =
-    "border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
+    "border-cyan-200 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/30"
 
 type SignupFormState = {
     name: string
@@ -114,20 +115,20 @@ const SignupPage = () => {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-green-50 via-white to-green-100 px-4 py-8">
+        <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_35%),linear-gradient(180deg,#f7fcff_0%,#edf8fd_50%,#ffffff_100%)] px-4 py-8">
             {/* decorative blobs */}
-            <div className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full bg-green-200/40 blur-3xl" />
-            <div className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full bg-green-300/30 blur-3xl" />
+            <div className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full bg-cyan-200/45 blur-3xl" />
+            <div className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full bg-sky-300/30 blur-3xl" />
 
-            <Card className="relative z-10 w-full max-w-lg border-green-200 bg-white/80 shadow-xl backdrop-blur-sm">
+            <Card className="relative z-10 w-full max-w-lg border-cyan-100 bg-white/78 shadow-[0_24px_70px_rgba(14,116,144,0.15)] backdrop-blur-sm">
                 <CardHeader className="items-center text-center pb-2">
-                    <div className="mb-2 flex size-16 items-center justify-center rounded-full bg-green-100 ring-4 ring-green-200/60">
-                        <Stethoscope className="size-8 text-green-700" />
+                    <div className="mb-2 flex size-16 items-center justify-center rounded-full bg-cyan-100 ring-4 ring-cyan-200/60">
+                        <Stethoscope className="size-8 text-cyan-700" />
                     </div>
-                    <CardTitle className="text-2xl font-bold text-green-800">
+                    <CardTitle className="text-2xl font-bold text-cyan-900">
                         Create Account
                     </CardTitle>
-                    <CardDescription className="text-green-600">
+                    <CardDescription className="text-cyan-700">
                         Register as a doctor on the portal
                     </CardDescription>
                 </CardHeader>
@@ -137,11 +138,11 @@ const SignupPage = () => {
                         <form onSubmit={handleSignup} className="space-y-4 pr-3">
                             {/* Full Name */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="name" className="text-green-800">
+                                <Label htmlFor="name" className="text-cyan-900">
                                     Full Name *
                                 </Label>
                                 <div className="relative">
-                                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
+                                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-cyan-600" />
                                     <Input
                                         id="name"
                                         placeholder="Dr. John Doe"
@@ -161,9 +162,9 @@ const SignupPage = () => {
                             {/* Hospital & Experience – side by side */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <Label className="text-green-800">Hospital *</Label>
+                                    <Label className="text-cyan-900">Hospital *</Label>
                                     <div className="relative">
-                                        <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500 z-10" />
+                                        <Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-cyan-600" />
                                         <Select
                                             value={form.hospital}
                                             onValueChange={(val) =>
@@ -189,11 +190,11 @@ const SignupPage = () => {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="experience" className="text-green-800">
+                                    <Label htmlFor="experience" className="text-cyan-900">
                                         Experience (years) *
                                     </Label>
                                     <div className="relative">
-                                        <Briefcase className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
+                                        <Briefcase className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-cyan-600" />
                                         <Input
                                             id="experience"
                                             type="number"
@@ -217,7 +218,7 @@ const SignupPage = () => {
                             {/* Specialization & Qualification – side by side */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <Label className="text-green-800">Specialization *</Label>
+                                    <Label className="text-cyan-900">Specialization *</Label>
                                     <Select
                                         value={form.specialization}
                                         onValueChange={(val) =>
@@ -242,9 +243,9 @@ const SignupPage = () => {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label className="text-green-800">Qualification *</Label>
+                                    <Label className="text-cyan-900">Qualification *</Label>
                                     <div className="relative">
-                                        <GraduationCap className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500 z-10" />
+                                        <GraduationCap className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-cyan-600" />
                                         <Select
                                             value={form.qualification}
                                             onValueChange={(val) =>
@@ -272,11 +273,11 @@ const SignupPage = () => {
 
                             {/* Mobile Number */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="phone" className="text-green-800">
+                                <Label htmlFor="phone" className="text-cyan-900">
                                     Mobile Number *
                                 </Label>
                                 <div className="relative">
-                                    <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
+                                    <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-cyan-600" />
                                     <Input
                                         id="phone"
                                         type="tel"
@@ -297,11 +298,11 @@ const SignupPage = () => {
 
                             {/* Password */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="password" className="text-green-800">
+                                <Label htmlFor="password" className="text-cyan-900">
                                     Password *
                                 </Label>
                                 <div className="relative">
-                                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
+                                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-cyan-600" />
                                     <Input
                                         id="password"
                                         type={form.showPassword ? "text" : "password"}
@@ -324,7 +325,7 @@ const SignupPage = () => {
                                                 showPassword: !prev.showPassword,
                                             }))
                                         }
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 hover:text-green-700"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-600 hover:text-cyan-800"
                                         aria-label={
                                             form.showPassword
                                                 ? "Hide password"
@@ -343,19 +344,19 @@ const SignupPage = () => {
                                 {form.password.length > 0 && (
                                     <div className="space-y-2 pt-1">
                                         <div className="flex items-center justify-between text-xs">
-                                            <span className="text-green-700">Password strength</span>
+                                            <span className="text-cyan-700">Password strength</span>
                                             <span
                                                 className={`font-semibold ${strength.label === "Weak"
                                                     ? "text-red-600"
                                                     : strength.label === "Fair"
                                                         ? "text-yellow-600"
-                                                        : "text-green-700"
+                                                        : "text-cyan-700"
                                                     }`}
                                             >
                                                 {strength.label}
                                             </span>
                                         </div>
-                                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-green-100">
+                                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-cyan-100">
                                             <div
                                                 className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
                                                 style={{ width: `${strength.percent}%` }}
@@ -367,7 +368,7 @@ const SignupPage = () => {
                                                 return (
                                                     <li
                                                         key={rule.label}
-                                                        className={`flex items-center gap-1.5 text-xs ${passed ? "text-green-600" : "text-muted-foreground"
+                                                        className={`flex items-center gap-1.5 text-xs ${passed ? "text-cyan-700" : "text-muted-foreground"
                                                             }`}
                                                     >
                                                         {passed ? (
@@ -386,11 +387,11 @@ const SignupPage = () => {
 
                             {/* Confirm Password */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="confirm-password" className="text-green-800">
+                                <Label htmlFor="confirm-password" className="text-cyan-900">
                                     Confirm Password *
                                 </Label>
                                 <div className="relative">
-                                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-green-500" />
+                                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-cyan-600" />
                                     <Input
                                         id="confirm-password"
                                         type={form.showConfirm ? "text" : "password"}
@@ -416,7 +417,7 @@ const SignupPage = () => {
                                                 showConfirm: !prev.showConfirm,
                                             }))
                                         }
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 hover:text-green-700"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-600 hover:text-cyan-800"
                                         aria-label={
                                             form.showConfirm
                                                 ? "Hide password"
@@ -432,7 +433,7 @@ const SignupPage = () => {
                                 </div>
                                 {form.confirmPassword.length > 0 && (
                                     <p
-                                        className={`text-xs flex items-center gap-1 ${passwordsMatch ? "text-green-600" : "text-red-500"
+                                        className={`text-xs flex items-center gap-1 ${passwordsMatch ? "text-cyan-700" : "text-red-500"
                                             }`}
                                     >
                                         {passwordsMatch ? (
@@ -451,21 +452,21 @@ const SignupPage = () => {
                             {/* Submit */}
                             <Button
                                 type="submit"
-                                className="w-full bg-green-600 text-white hover:bg-green-700 h-10 text-base font-semibold mt-2"
+                                className="mt-2 h-10 w-full bg-cyan-700 text-base font-semibold text-white hover:bg-cyan-800"
                             >
                                 Create Account
                             </Button>
                         </form>
                     </ScrollArea>
 
-                    <p className="mt-5 text-center text-sm text-green-700/70">
+                    <p className="mt-5 text-center text-sm text-cyan-800/75">
                         Already have an account?{" "}
-                        <a
+                        <Link
                             href="/login"
-                            className="font-medium text-green-700 hover:text-green-900 underline underline-offset-2"
+                            className="font-medium text-cyan-700 underline underline-offset-2 hover:text-cyan-900"
                         >
                             Sign In
-                        </a>
+                        </Link>
                     </p>
                 </CardContent>
             </Card>
