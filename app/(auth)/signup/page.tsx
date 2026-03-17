@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,10 +32,16 @@ import {
     CheckCircle2,
     XCircle,
 } from "lucide-react"
-import { hospitals, qualifications, specializations } from "@/constants"
-
-import bcrypt from "bcryptjs";
+import { qualifications, specializations } from "@/constants"
 import Link from "next/link"
+import { Hospitals } from "@/config/schema"
+import { useDoctorStore } from "@/store/doctor.store"
+import { db } from "@/config"
+
+type HospitalOption = {
+    id: number
+    name: string
+}
 
 function getPasswordStrength(password: string) {
     let score = 0
@@ -92,25 +98,57 @@ const SignupPage = () => {
         showPassword: false,
         showConfirm: false,
     })
+    const [hospitalOptions, setHospitalOptions] = useState<HospitalOption[]>([])
+
+    const { signup } = useDoctorStore();
+
+    useEffect(() => {
+        let active = true
+
+        const loadHospitals = async () => {
+            try {
+                const data = await db
+                    .select({
+                        id: Hospitals.id,
+                        name: Hospitals.name,
+                    })
+                    .from(Hospitals)
+
+                if (active) {
+                    setHospitalOptions(data)
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        loadHospitals()
+
+        return () => {
+            active = false
+        }
+    }, [])
 
     const strength = useMemo(() => getPasswordStrength(form.password), [form.password])
     const passwordsMatch =
         form.confirmPassword.length > 0 && form.password === form.confirmPassword
 
-    const handleSignup = (e: React.FormEvent) => {
+    const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault()
-        console.log("Signup data:", {
+
+        if (!form.hospital) {
+            return
+        }
+
+        await signup({
             name: form.name,
-            hospital: form.hospital,
-            experience: form.experience,
+            hospital: Number(form.hospital),
+            experience: Number(form.experience),
             specialization: form.specialization,
             qualification: form.qualification,
             phone: form.phone,
             password: form.password,
         })
-
-        const hashedPassword = bcrypt.hashSync(form.password, 10)
-        console.log(hashedPassword)
 
     }
 
@@ -179,9 +217,9 @@ const SignupPage = () => {
                                                 <SelectValue placeholder="Select hospital" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {hospitals.map((h) => (
-                                                    <SelectItem key={h} value={h}>
-                                                        {h}
+                                                {hospitalOptions.map((hospital) => (
+                                                    <SelectItem key={hospital.id} value={String(hospital.id)}>
+                                                        {hospital.name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

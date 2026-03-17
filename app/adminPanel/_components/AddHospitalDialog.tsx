@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { departmentsList } from "@/constants"
+import { AdminStore } from "@/store/admin.store"
 import { HospitalFormData } from "@/types"
 import { PlusCircle } from "lucide-react"
 import { useState } from "react"
@@ -61,6 +62,8 @@ const initialFormData: HospitalFormData = {
 const AddHospitalDialog = () => {
     const [formData, setFormData] = useState<HospitalFormData>(initialFormData)
     const [open, setOpen] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const { registerHospital } = AdminStore()
 
     const updateField = (field: keyof HospitalFormData, value: string | boolean) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
@@ -75,10 +78,17 @@ const AddHospitalDialog = () => {
         }))
     }
 
-    const handleSubmit = () => {
-        console.log("Hospital Data:", formData)
-        setFormData(initialFormData)
-        setOpen(false)
+    const handleSubmit = async () => {
+        setIsSubmitting(true)
+
+        const isRegistered = await registerHospital(formData)
+
+        if (isRegistered) {
+            setFormData(initialFormData)
+            setOpen(false)
+        }
+
+        setIsSubmitting(false)
     }
 
     return (
@@ -458,9 +468,10 @@ const AddHospitalDialog = () => {
                     </Button>
                     <Button
                         onClick={handleSubmit}
+                        disabled={isSubmitting}
                         className="bg-green-600 text-white hover:bg-green-700"
                     >
-                        Add Hospital
+                        {isSubmitting ? "Adding..." : "Add Hospital"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
