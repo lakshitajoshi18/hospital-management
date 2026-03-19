@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import EmergencyDialogBox from "./EmergencyDialogBox";
+import Image from "next/image";
 
 const navItems = [
     { label: "Home", href: "#home" },
@@ -24,7 +25,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between gap-4">
                     <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setIsOpen(false)}>
                         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-cyan-600 via-sky-500 to-emerald-400 text-sm font-bold tracking-[0.2em] text-white shadow-[0_10px_30px_rgba(14,165,233,0.35)]">
-                            M
+                            <Image src={"/hospital/logo.png"} alt="logo" width={500} height={500} className="w-[125%] h-full rounded-full" />
                         </div>
                         <div>
                             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-700">MEDISTREAM</p>
