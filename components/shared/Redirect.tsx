@@ -6,7 +6,7 @@ import SkeletonGroup from "./SkeletonGroup";
 
 const Redirect = ({ children }: { children: React.ReactNode }) => {
   const path = usePathname();
-  const { user, isAdmin,checkAuth,isCheckingUser  } = useDoctorStore();
+  const { user, isAdmin, checkAuth, isCheckingUser } = useDoctorStore();
 
   useEffect(() => {
     checkAuth();
@@ -14,12 +14,12 @@ const Redirect = ({ children }: { children: React.ReactNode }) => {
   if (isCheckingUser)
     return (
       <div className="flex justify-center items-center h-[calc(100vh-100px)]">
-        <SkeletonGroup/>
+        <SkeletonGroup />
       </div>
     );
   if (path.includes("/login") && user) return redirect("/");
   if (path.includes("/signup") && user) return redirect("/");
-  if (path.includes("/admin") && !isAdmin) return redirect("/");
+  if (path.includes("/adminPanel") && !isAdmin) return redirect("/");
   return children;
 };
 

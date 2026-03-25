@@ -95,7 +95,7 @@ const PatientForm = () => {
 
     return (
         <section
-            id="patient-form"
+            id="appointment"
             className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_36%),linear-gradient(180deg,#f7fcff_0%,#edf9fe_48%,#ffffff_100%)] px-4 py-16 sm:px-6 lg:px-8"
         >
             <div className="absolute -left-20 top-8 h-64 w-64 rounded-full bg-cyan-200/35 blur-3xl" />

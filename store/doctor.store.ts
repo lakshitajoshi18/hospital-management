@@ -1,10 +1,23 @@
-import { Doctors } from "@/config/schema";
+import { Doctors, Hospitals, Patients } from "@/config/schema";
 import bcrypt from 'bcryptjs';
 import { eq } from "drizzle-orm";
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import { toast } from "sonner";
 import { create } from "zustand";
 import { db } from "../config/index";
+import { DOCTORTYPE } from "@/types";
+
+const DOCTOR_TOKEN_KEY = "doctorToken";
+
+const createDoctorToken = (doctorId: number | null) => {
+    if (!doctorId) return null;
+    return String(doctorId);
+}
+
+const parseDoctorIdFromToken = (token: string) => {
+    const doctorId = Number(token);
+    if (!Number.isFinite(doctorId) || doctorId <= 0) return null;
+    return doctorId;
+}
 
 interface DoctorSignupInput {
     name: string;
@@ -23,24 +36,45 @@ interface DoctorLoginInput {
 }
 
 interface DOCTORSTOREINTERFACE {
-    user: any,
+    user: DOCTORTYPE | null,
     token: string | null,
+    isAdmin: boolean;
+    isCheckingUser: boolean;
+    appointmentList: any[];
+    selectedPatient: any;
     signup: (input: DoctorSignupInput) => Promise<void>;
     login: (input: DoctorLoginInput) => Promise<void>;
     checkAuth: () => void;
-    isAdmin: boolean;
-    isCheckingUser: boolean;
     logout: () => void;
+    getAppointmentList: () => Promise<void>;
+    selectPatient: (id: string) => Promise<void>;
+    appointPatient: (id: string, medicines: string) => Promise<void>;
+    updateProfile: (input: any) => Promise<void>;
 }
 
 const authMiddleware = async () => {
-    const token = localStorage.getItem("doctorToken");
+    const token = localStorage.getItem(DOCTOR_TOKEN_KEY);
     if (!token) return null;
-    const decoded = jwt.decode(token) as JwtPayload;
+    const doctorId = parseDoctorIdFromToken(token);
+    if (!doctorId) return null;
 
     const user = await db.select({
-
-    }).from(Doctors).where(eq(Doctors.id, decoded.id));
+        id: Doctors.id,
+        name: Doctors.name,
+        specialization: Doctors.specialization,
+        experience: Doctors.experience,
+        qualification: Doctors.qualification,
+        hospital: {
+            id: Hospitals.id,
+            name: Hospitals.name
+        },
+        phone: Doctors.phone,
+        city: Doctors.city,
+        isVerified: Doctors.isVerified,
+        patientsAppointed: Doctors.patientsAppointed
+    }).from(Doctors)
+        .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
+        .where(eq(Doctors.id, doctorId));
 
     if (!user) return null;
     return user[0];
@@ -51,6 +85,8 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     token: null,
     isAdmin: false,
     isCheckingUser: true,
+    appointmentList: [],
+    selectedPatient: null,
     // signup controller
     signup: async (input: DoctorSignupInput) => {
         try {
@@ -67,7 +103,10 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
 
             const hashedPassword = await bcrypt.hash(input.password, 10);
 
-            const response = await db.insert(Doctors).values({
+            // check if user id in the list of admin ids
+            const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(input.phone);
+
+            await db.insert(Doctors).values({
                 hospital: input.hospital,
                 name: input.name,
                 experience: input.experience,
@@ -76,17 +115,40 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 phone: input.phone,
                 password: hashedPassword,
                 city: input.city,
-            } as any).returning();
+                isVerified: isAdminId ? true : false
+            }).then(async () => {
+                const response = await db.select({
+                    id: Doctors.id,
+                    name: Doctors.name,
+                    specialization: Doctors.specialization,
+                    experience: Doctors.experience,
+                    qualification: Doctors.qualification,
+                    hospital: {
+                        id: Hospitals.id,
+                        name: Hospitals.name
+                    },
+                    phone: Doctors.phone,
+                    city: Doctors.city,
+                    isVerified: Doctors.isVerified,
+                    patientsAppointed: Doctors.patientsAppointed
+                })
+                    .from(Doctors)
+                    .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
+                    .where(eq(Doctors.phone, input.phone))
+                    .limit(1);
 
-            if (response.length > 0) {
-                const token = jwt.sign({ id: response[0].id }, process.env.NEXT_PUBLIC_JWT_SECRET!);
-                if (token) {
-                    set({ token });
-                    localStorage.setItem('doctorToken', token);
+                // if User get the response
+                if (response.length > 0) {
+                    const token = createDoctorToken(response[0].id);
+                    if (token) {
+                        set({ token });
+                        localStorage.setItem(DOCTOR_TOKEN_KEY, token);
+                    }
+                    toast.success("Doctor Registered Successfully");
+                    set({ user: response[0], isAdmin: isAdminId });
                 }
-                toast.success("Doctor Registered Successfully");
-                set({ user: response[0] })
-            }
+            });
+
         } catch (error) {
             toast.error("Something went wrong");
             console.log(error)
@@ -101,28 +163,57 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
             }
 
             // find user in the database
-            const existingUser = await db.select().from(Doctors).where(eq(
-                Doctors.phone, input.phone
-            ));
+            const existingUser = await db.select({
+                id: Doctors.id,
+                name: Doctors.name,
+                specialization: Doctors.specialization,
+                experience: Doctors.experience,
+                qualification: Doctors.qualification,
+                hospital: {
+                    id: Hospitals.id,
+                    name: Hospitals.name
+                },
+                phone: Doctors.phone,
+                city: Doctors.city,
+                isVerified: Doctors.isVerified,
+                patientsAppointed: Doctors.patientsAppointed,
+                password: Doctors.password
+            }).from(Doctors)
+                .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
+                .where(eq(
+                    Doctors.phone, input.phone
+                ))
+                .limit(1);
+
+            console.log(existingUser)
             if (existingUser.length === 0) {
                 toast.error("User not found");
                 return
             }
 
             // compare the password of user and input
-            const isMatch = await bcrypt.compare(input.password, existingUser[0].password);
+            const isMatch = await bcrypt.compare(input.password, existingUser[0].password!);
             if (!isMatch) {
                 toast.error("Incorrect Password");
                 return
             }
 
-            // creating the jwt token
-            const token = jwt.sign({ id: existingUser[0].id }, process.env.NEXT_PUBLIC_JWT_SECRET!);
+            console.log("Creating token")
+
+            // create a client-safe auth token from doctor id
+            const token = createDoctorToken(existingUser[0].id);
             if (token) {
                 set({ token });
-                localStorage.setItem('doctorToken', token);
+                localStorage.setItem(DOCTOR_TOKEN_KEY, token);
             }
-            set({ user: existingUser[0] });
+            if (existingUser[0]) {
+                const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(existingUser[0].phone!);
+                console.log(isAdminId === true)
+                set({
+                    user: existingUser[0],
+                    isAdmin: isAdminId
+                });
+            }
         }
         catch (error) {
             toast.error("Something went wrong");
@@ -135,12 +226,12 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
             set({ isCheckingUser: true })
             const user = await authMiddleware();
             // check for admin 
-            // if (user?.phone === process.env.NEXT_PUBLIC_ADMIN_PHONE) set({ isAdmin: true });
             if (user) {
                 set({ user, isCheckingUser: false });
+                const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(user.phone!);
+                set({ isAdmin: isAdminId });
             }
         } catch (error) {
-
         }
         finally {
             set({ isCheckingUser: false })
@@ -148,7 +239,107 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     },
     // logout controller
     logout: () => {
-        set({ user: null, token: null });
-        localStorage.removeItem('doctorToken');
+        set({ user: null, token: null, isAdmin: false });
+        localStorage.removeItem(DOCTOR_TOKEN_KEY);
     },
+    // get appointment list 
+    getAppointmentList: async () => {
+        try {
+            if (!get().user) return;
+            const response = await db.select({
+
+            })
+                .from(Patients)
+                .where(eq(Patients.hospital, Number(get().user?.hospital?.id)) && eq(Patients.isAppointed, false) && eq(Patients.appointmentDate, new Date().toISOString().split('T')[0]));
+
+            set({ appointmentList: response })
+        } catch (error) {
+            console.log(error);
+        }
+    },
+    // select patient
+    selectPatient: async (id) => {
+        try {
+            const response = await db.select({
+                id: Patients.id,
+                name: Patients.name,
+                age: Patients.age,
+                gender: Patients.gender,
+                address: Patients.address,
+                problem: Patients.problem,
+                mobile: Patients.mobile,
+                appointmentDate: Patients.appointmentDate,
+                medicines: Patients.medicines,
+                hospital: {
+                    id: Hospitals.id,
+                    name: Hospitals.name
+                },
+                appointedBy: {
+                    id: Doctors.id,
+                    name: Doctors.name
+                },
+            })
+                .from(Patients)
+                .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
+                .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
+                .where(eq(Patients.id, Number(id)))
+                .limit(1);
+            set({ selectedPatient: response[0] })
+        } catch (error) {
+            console.log(error)
+        }
+    },
+    // appoint Patient
+    appointPatient: async (id, medicines) => {
+        try {
+            const response = await db.update(Patients)
+                .set({
+                    medicines: medicines,
+                    isAppointed: true,
+                })
+                .where(eq(Patients.id, Number(id)))
+                .returning()
+
+            if (response) {
+                set({ selectedPatient: response[0] })
+                toast.success("Patient Appointed Successfully")
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    },
+    // update Profile
+    updateProfile: async (input) => {
+        try {
+            await db.update(Doctors)
+                .set(input)
+                .where(eq(Doctors.id, Number(get().user?.id)))
+                .returning().then(async () => {
+                    const res = await db.select({
+                        id: Doctors.id,
+                        name: Doctors.name,
+                        specialization: Doctors.specialization,
+                        experience: Doctors.experience,
+                        qualification: Doctors.qualification,
+                        hospital: {
+                            id: Hospitals.id,
+                            name: Hospitals.name
+                        },
+                        phone: Doctors.phone,
+                        city: Doctors.city,
+                        isVerified: Doctors.isVerified,
+                        patientsAppointed: Doctors.patientsAppointed
+                    }).from(Doctors)
+                        .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
+                        .where(eq(Doctors.id, Number(get().user?.id))).limit(1);
+                    if (res) {
+                        set({ user: res[0] })
+                        toast.success("Profile Updated Successfully");
+                    }
+                })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
 }))

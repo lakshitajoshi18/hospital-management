@@ -37,6 +37,7 @@ import Link from "next/link"
 import { Hospitals } from "@/config/schema"
 import { useDoctorStore } from "@/store/doctor.store"
 import { db } from "@/config"
+import { useRouter } from "next/navigation"
 
 type HospitalOption = {
     id: number
@@ -98,7 +99,8 @@ const SignupPage = () => {
         showPassword: false,
         showConfirm: false,
     })
-    const [hospitalOptions, setHospitalOptions] = useState<HospitalOption[]>([])
+    const [hospitalOptions, setHospitalOptions] = useState<HospitalOption[]>([]);
+    const [isLoading, setisLoading] = useState(false);
 
     const { signup } = useDoctorStore();
 
@@ -128,8 +130,13 @@ const SignupPage = () => {
             active = false
         }
     }, [])
+    const router = useRouter();
 
     const strength = useMemo(() => getPasswordStrength(form.password), [form.password])
+    const selectedHospitalName = useMemo(
+        () => hospitalOptions.find((hospital) => String(hospital.id) === form.hospital)?.name,
+        [hospitalOptions, form.hospital]
+    )
     const passwordsMatch =
         form.confirmPassword.length > 0 && form.password === form.confirmPassword
 
@@ -140,6 +147,8 @@ const SignupPage = () => {
             return
         }
 
+        setisLoading(true)
+
         await signup({
             name: form.name,
             hospital: Number(form.hospital),
@@ -148,8 +157,10 @@ const SignupPage = () => {
             qualification: form.qualification,
             phone: form.phone,
             password: form.password,
+        }).then(() => {
+            setisLoading(false)
+            router.push("/dashboard")
         })
-
     }
 
     return (
@@ -214,11 +225,13 @@ const SignupPage = () => {
                                             }
                                         >
                                             <SelectTrigger className={`w-full pl-10 ${inputClass}`}>
-                                                <SelectValue placeholder="Select hospital" />
+                                                <SelectValue placeholder="Select hospital">
+                                                    {selectedHospitalName}
+                                                </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {hospitalOptions.map((hospital) => (
-                                                    <SelectItem key={hospital.id} value={String(hospital.id)}>
+                                                    <SelectItem key={hospital.id} value={Number(hospital.id)}>
                                                         {hospital.name}
                                                     </SelectItem>
                                                 ))}

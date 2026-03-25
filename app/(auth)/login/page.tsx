@@ -13,15 +13,31 @@ import {
 } from "@/components/ui/card"
 import { Stethoscope, Phone, Lock, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
+import { useDoctorStore } from "@/store/doctor.store"
+import { useRouter } from "next/navigation"
 
 const LoginPage = () => {
+    const { login } = useDoctorStore();
+    const router = useRouter();
+    const [isLoading, setisLoading] = useState(false);
     const [phone, setPhone] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault()
-        console.log("Login attempt:", { phone, password })
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        // Add your login logic here
+        try {
+            setisLoading(true)
+            await login({ phone, password }).then(() => {
+                router.push("/dashboard");
+            });
+
+        } catch (error) {
+        }
+        finally {
+            setisLoading(false)
+        }
     }
 
     return (
@@ -110,7 +126,7 @@ const LoginPage = () => {
                             type="submit"
                             className="h-10 w-full bg-cyan-700 text-base font-semibold text-white hover:bg-cyan-800"
                         >
-                            Sign In
+                            {isLoading ? "Signing In..." : "Sign In"}
                         </Button>
                     </form>
 

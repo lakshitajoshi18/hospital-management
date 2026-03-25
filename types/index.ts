@@ -26,3 +26,40 @@ export interface HospitalFormData {
     emergencyAvailable: boolean
     description: string
 }
+
+export type DOCTORTYPE = {
+    id: number | null
+    name: string | null
+    specialization: string | null
+    experience: number | null
+    qualification: string | null
+    hospital: {
+        id: number | null
+        name: string | null
+    } | null
+    phone: string | null
+    city: string | null
+    isVerified: boolean | null
+    patientsAppointed: number | null
+}
+
+export type APPOINTMENTS = {
+    id: number
+    name: string
+    age: number
+    gender: string
+    address: string | null
+    problem: string
+    mobile: string
+    appointmentDate: string
+    medicines: string | null
+    hospital: {
+        id: number
+        name: string
+    }
+    appointedBy: {
+        id: number
+        name: string
+    } | null
+    isAppointed: boolean
+}
