@@ -1,22 +1,29 @@
 import { Doctors, Hospitals, Patients } from "@/config/schema";
 import bcrypt from 'bcryptjs';
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { db } from "../config/index";
-import { DOCTORTYPE } from "@/types";
+import { APPOINTMENTS, DOCTORTYPE } from "@/types";
 
 const DOCTOR_TOKEN_KEY = "doctorToken";
 
-const createDoctorToken = (doctorId: number | null) => {
+const createDoctorToken = (doctorId: string | null) => {
     if (!doctorId) return null;
     return String(doctorId);
 }
 
 const parseDoctorIdFromToken = (token: string) => {
-    const doctorId = Number(token);
-    if (!Number.isFinite(doctorId) || doctorId <= 0) return null;
+    const doctorId = (token);
     return doctorId;
+}
+
+const generateUUID = () => {
+    if (typeof globalThis !== "undefined" && globalThis.crypto?.randomUUID) {
+        return globalThis.crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 interface DoctorSignupInput {
@@ -40,16 +47,18 @@ interface DOCTORSTOREINTERFACE {
     token: string | null,
     isAdmin: boolean;
     isCheckingUser: boolean;
-    appointmentList: any[];
-    selectedPatient: any;
+    appointedPaitentsList: APPOINTMENTS[],
+    appointmentList: APPOINTMENTS[];
+    selectedPatient: APPOINTMENTS | null;
     signup: (input: DoctorSignupInput) => Promise<void>;
     login: (input: DoctorLoginInput) => Promise<void>;
     checkAuth: () => void;
     logout: () => void;
     getAppointmentList: () => Promise<void>;
-    selectPatient: (id: string) => Promise<void>;
+    selectPatient: (patient: APPOINTMENTS) => Promise<void>;
     appointPatient: (id: string, medicines: string) => Promise<void>;
     updateProfile: (input: any) => Promise<void>;
+    getAppointedPatientList: () => Promise<void>;
 }
 
 const authMiddleware = async () => {
@@ -59,6 +68,7 @@ const authMiddleware = async () => {
     if (!doctorId) return null;
 
     const user = await db.select({
+        uid: Doctors.uid,
         id: Doctors.id,
         name: Doctors.name,
         specialization: Doctors.specialization,
@@ -74,7 +84,7 @@ const authMiddleware = async () => {
         patientsAppointed: Doctors.patientsAppointed
     }).from(Doctors)
         .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
-        .where(eq(Doctors.id, doctorId));
+        .where(eq(Doctors.uid, doctorId));
 
     if (!user) return null;
     return user[0];
@@ -86,6 +96,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     isAdmin: false,
     isCheckingUser: true,
     appointmentList: [],
+    appointedPaitentsList: [],
     selectedPatient: null,
     // signup controller
     signup: async (input: DoctorSignupInput) => {
@@ -95,18 +106,23 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 return;
             }
 
-            const existingUser = await db.select().from(Doctors).where(eq(Doctors.phone, input.phone));
+            const existingUser = await db.select({
+                id: Doctors.id,
+                phone: Doctors.phone
+            }).from(Doctors).where(eq(Doctors.phone, input.phone));
             if (existingUser.length > 0) {
                 toast.error("User with same phone number already exists");
                 return;
             }
 
             const hashedPassword = await bcrypt.hash(input.password, 10);
+            const uid = generateUUID();
 
             // check if user id in the list of admin ids
             const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(input.phone);
 
             await db.insert(Doctors).values({
+                uid: uid,
                 hospital: input.hospital,
                 name: input.name,
                 experience: input.experience,
@@ -118,6 +134,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 isVerified: isAdminId ? true : false
             }).then(async () => {
                 const response = await db.select({
+                    uid: Doctors.uid,
                     id: Doctors.id,
                     name: Doctors.name,
                     specialization: Doctors.specialization,
@@ -139,7 +156,8 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
 
                 // if User get the response
                 if (response.length > 0) {
-                    const token = createDoctorToken(response[0].id);
+                    const token = createDoctorToken(response[0].uid);
+
                     if (token) {
                         set({ token });
                         localStorage.setItem(DOCTOR_TOKEN_KEY, token);
@@ -164,6 +182,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
 
             // find user in the database
             const existingUser = await db.select({
+                uid: Doctors.uid,
                 id: Doctors.id,
                 name: Doctors.name,
                 specialization: Doctors.specialization,
@@ -185,7 +204,6 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 ))
                 .limit(1);
 
-            console.log(existingUser)
             if (existingUser.length === 0) {
                 toast.error("User not found");
                 return
@@ -198,10 +216,8 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 return
             }
 
-            console.log("Creating token")
-
             // create a client-safe auth token from doctor id
-            const token = createDoctorToken(existingUser[0].id);
+            const token = createDoctorToken(existingUser[0].uid);
             if (token) {
                 set({ token });
                 localStorage.setItem(DOCTOR_TOKEN_KEY, token);
@@ -247,20 +263,6 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         try {
             if (!get().user) return;
             const response = await db.select({
-
-            })
-                .from(Patients)
-                .where(eq(Patients.hospital, Number(get().user?.hospital?.id)) && eq(Patients.isAppointed, false) && eq(Patients.appointmentDate, new Date().toISOString().split('T')[0]));
-
-            set({ appointmentList: response })
-        } catch (error) {
-            console.log(error);
-        }
-    },
-    // select patient
-    selectPatient: async (id) => {
-        try {
-            const response = await db.select({
                 id: Patients.id,
                 name: Patients.name,
                 age: Patients.age,
@@ -278,14 +280,54 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                     id: Doctors.id,
                     name: Doctors.name
                 },
+                isAppointed: Patients.isAppointed
             })
                 .from(Patients)
                 .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
                 .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
-                .where(eq(Patients.id, Number(id)))
-                .limit(1);
-            set({ selectedPatient: response[0] })
+                .where(
+                    and(
+                        eq(Patients.hospital, Number(get().user?.hospital?.id)),
+                        eq(Patients.isAppointed, false),
+                        eq(Patients.appointmentDate, new Date().toISOString().split('T')[0])
+                    )
+                );
+            const normalizedAppointments: APPOINTMENTS[] = response
+                .filter((item) => item.id !== null)
+                .map((item) => ({
+                    id: item.id ?? 0,
+                    name: item.name ?? "Unknown Patient",
+                    age: item.age ?? 0,
+                    gender: item.gender ?? "other",
+                    address: item.address,
+                    problem: item.problem ?? "Not specified",
+                    mobile: item.mobile ?? "N/A",
+                    appointmentDate: item.appointmentDate ?? new Date().toISOString().split('T')[0],
+                    medicines: item.medicines,
+                    hospital: {
+                        id: item.hospital?.id ?? 0,
+                        name: item.hospital?.name ?? "Unknown Hospital"
+                    },
+                    appointedBy: item.appointedBy?.id
+                        ? {
+                            id: item.appointedBy.id,
+                            name: item.appointedBy.name ?? "Unknown Doctor"
+                        }
+                        : null,
+                    isAppointed: item.isAppointed ?? false,
+                }))
+
+            set({ appointmentList: normalizedAppointments })
         } catch (error) {
+            console.log(error);
+        }
+    },
+    // select patient
+    selectPatient: async (APPOINTMENTS) => {
+        try {
+            set({ selectedPatient: APPOINTMENTS })
+        } catch (error) {
+            toast.error("Something went wrong");
             console.log(error)
         }
     },
@@ -301,7 +343,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 .returning()
 
             if (response) {
-                set({ selectedPatient: response[0] })
+                set({ selectedPatient: null })
                 toast.success("Patient Appointed Successfully")
             }
         } catch (error) {
@@ -340,6 +382,69 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         } catch (error) {
             console.log(error)
         }
-    }
+    },
+    // get appointed Patients
+    getAppointedPatientList: async () => {
+        try {
+            const response = await db.select({
+                id: Patients.id,
+                name: Patients.name,
+                age: Patients.age,
+                gender: Patients.gender,
+                address: Patients.address,
+                problem: Patients.problem,
+                mobile: Patients.mobile,
+                appointmentDate: Patients.appointmentDate,
+                medicines: Patients.medicines,
+                hospital: {
+                    id: Hospitals.id,
+                    name: Hospitals.name
+                },
+                appointedBy: {
+                    id: Doctors.id,
+                    name: Doctors.name
+                },
+                isAppointed: Patients.isAppointed
+            })
+                .from(Patients)
+                .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
+                .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
+                .where(
+                    and(
+                        eq(Patients.appointedBy, Number(get().user?.id)),
+                        eq(Patients.hospital, Number(get().user?.hospital?.id)),
+                        eq(Patients.isAppointed, true)
+                    )
+                );
+            const normalizedAppointments: APPOINTMENTS[] = response
+                .filter((item) => item.id !== null)
+                .map((item) => ({
+                    id: item.id ?? 0,
+                    name: item.name ?? "Unknown Patient",
+                    age: item.age ?? 0,
+                    gender: item.gender ?? "other",
+                    address: item.address,
+                    problem: item.problem ?? "Not specified",
+                    mobile: item.mobile ?? "N/A",
+                    appointmentDate: item.appointmentDate ?? new Date().toISOString().split('T')[0],
+                    medicines: item.medicines,
+                    hospital: {
+                        id: item.hospital?.id ?? 0,
+                        name: item.hospital?.name ?? "Unknown Hospital"
+                    },
+                    appointedBy: item.appointedBy?.id
+                        ? {
+                            id: item.appointedBy.id,
+                            name: item.appointedBy.name ?? "Unknown Doctor"
+                        }
+                        : null,
+                    isAppointed: item.isAppointed ?? false,
+                }))
+
+            set({ appointedPaitentsList: normalizedAppointments })
+        } catch (error) {
+            console.log(error);
+        }
+    },
 
 }))

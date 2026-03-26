@@ -10,10 +10,12 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDoctorStore } from '@/store/doctor.store'
 import { qualifications, specializations } from '@/constants'
+import { useRouter } from 'next/navigation'
 
 const ProfilePage = () => {
   // Mock doctor data - You can replace this with actual API call
-  const { user } = useDoctorStore();
+  const { user, logout } = useDoctorStore();
+  const router = useRouter()
   const [doctor, setDoctor] = useState<DOCTORTYPE>(user as DOCTORTYPE);
 
   const [isEditing, setIsEditing] = useState(false)
@@ -48,6 +50,11 @@ const ProfilePage = () => {
     setIsEditing(false)
   }
 
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
@@ -60,12 +67,20 @@ const ProfilePage = () => {
               </div>
               <div className="flex gap-2">
                 {!isEditing && (
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Edit Profile
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Edit Profile
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="destructive"
+                    >
+                      Logout
+                    </Button>
+                  </>
                 )}
                 {isEditing && (
                   <>

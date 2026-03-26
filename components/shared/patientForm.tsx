@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import {
     CalendarDays,
@@ -12,7 +12,6 @@ import {
     User,
 } from "lucide-react";
 
-import { hospitals } from "@/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -36,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { usePatientStore } from "@/store/patient.store";
 
 type Gender = "male" | "female" | "other";
 
@@ -66,8 +66,21 @@ const cities = ["Pithoragarh", "Nainital", "Dehradun", "Haldwani", "Almora"];
 const fieldClassName = "h-11 rounded-xl border-cyan-200 bg-white/85 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/30";
 
 const PatientForm = () => {
+    const { hospitalList, getHospitalList, bookAppointment } = usePatientStore();
     const [form, setForm] = useState<PatientFormState>(defaultState);
     const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(new Date());
+    const [isHospitalLoading, setIsHospitalLoading] = useState(true);
+
+
+    useEffect(() => {
+        const loadHospitals = async () => {
+            setIsHospitalLoading(true);
+            await getHospitalList();
+            setIsHospitalLoading(false);
+        };
+
+        loadHospitals();
+    }, [getHospitalList]);
 
     const isFormValid = useMemo(() => {
         return Boolean(
@@ -90,7 +103,7 @@ const PatientForm = () => {
             appointmentDate: appointmentDate ? format(appointmentDate, "yyyy-MM-dd") : "",
         };
 
-        console.log("Patient appointment payload:", payload);
+        bookAppointment(payload);
     };
 
     return (
@@ -232,12 +245,18 @@ const PatientForm = () => {
                                             onValueChange={(value) => setForm((prev) => ({ ...prev, hospital: value ?? "" }))}
                                         >
                                             <SelectTrigger id="patient-hospital" className={cn("w-full pl-10", fieldClassName)}>
-                                                <SelectValue placeholder="Choose hospital" />
+                                                <SelectValue placeholder={isHospitalLoading ? "Loading hospitals..." : "Choose hospital"} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {hospitals.map((hospitalName) => (
-                                                    <SelectItem key={hospitalName} value={hospitalName}>{hospitalName}</SelectItem>
-                                                ))}
+                                                {hospitalList.length > 0 ? (
+                                                    hospitalList.map((hospital) => (
+                                                        <SelectItem key={hospital.id} value={String(hospital.id)}>{hospital.name}</SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <SelectItem value="no-hospital" disabled>
+                                                        No hospital available
+                                                    </SelectItem>
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     </div>

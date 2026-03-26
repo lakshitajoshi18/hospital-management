@@ -19,7 +19,7 @@ const navItems = [
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { isAdmin, user } = useDoctorStore();
+    const { user } = useDoctorStore();
 
     return (
         <header className="sticky top-4 z-50">
@@ -34,6 +34,9 @@ const Navbar = () => {
                             priority
                             className="h-12 w-auto object-contain"
                         />
+                        <div className="hidden min-w-0 sm:block">
+                            <h1 className="bg-linear-to-r from-cyan-600 via-blue-600 to-cyan-700 bg-clip-text text-lg font-bold text-transparent transition-all duration-300 hover:scale-105 hover:via-blue-500 cursor-pointer">MEDISTREAM</h1>
+                        </div>
                     </Link>
 
                     <div className="hidden items-center gap-1 rounded-full border border-cyan-100 bg-white/80 p-1 lg:flex">
