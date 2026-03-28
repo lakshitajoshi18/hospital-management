@@ -2,11 +2,12 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
 import { useDoctorStore } from '@/store/doctor.store'
-import { APPOINTMENTS } from '@/types'
+import { APPOINTMENTS, MEDICINETYPES } from '@/types'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import InputMedicines from './_component/MedicineInput'
+import { toast } from 'sonner'
 
 const PatientInfo = () => {
     const { selectedPatient, appointPatient, appointmentList, getAppointmentList, selectPatient, user } = useDoctorStore()
@@ -14,7 +15,7 @@ const PatientInfo = () => {
     const router = useRouter()
 
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [medicines, setMedicines] = useState('')
+    const [medicines, setMedicines] = useState<MEDICINETYPES[]>([]);
 
     const patientId = useMemo(() => Number(params.patientId), [params.patientId])
 
@@ -42,11 +43,22 @@ const PatientInfo = () => {
 
     const activePatient = selectedPatient?.id === patientId ? selectedPatient : null
 
+    const medicinesPayload = useMemo(
+        () => medicines
+            .map((item, index) => `${index + 1}. ${item.medicine} - ${item.consumption} - ${item.days} day(s)`)
+            .join('\n'),
+        [medicines]
+    )
+
     const handleAppointPatient = async () => {
-        if (!activePatient || !medicines.trim()) return
+        if (!activePatient) return
+        if (medicines.length === 0) {
+            toast.error('Add at least one medicine before saving')
+            return
+        }
 
         setIsSubmitting(true)
-        await appointPatient(String(activePatient.id), medicines.trim())
+        await appointPatient(String(activePatient.id), medicinesPayload)
         setIsSubmitting(false)
         router.push('/dashboard/todays-appointments')
     }
@@ -116,13 +128,24 @@ const PatientInfo = () => {
 
                     <div className='rounded-xl border border-cyan-200 bg-cyan-50/35 p-4 md:p-5'>
                         <p className='mb-3 text-sm font-semibold text-cyan-900'>Medicines</p>
-                        <p className='mb-3 text-xs text-cyan-800/80'>Write prescription in the blank lines below.</p>
-                        <Textarea
-                            value={medicines}
-                            onChange={(event) => setMedicines(event.target.value)}
-                            placeholder='1.\n2.\n3.\n4.\n5.'
-                            className='min-h-44 border-cyan-200 bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_27px,rgba(14,116,144,0.16)_28px)] bg-white/95 leading-7'
-                        />
+                        <p className='mb-3 text-xs text-cyan-800/80'>Add medicines using the fields below.</p>
+
+                        <InputMedicines medicines={medicines} setMedicines={setMedicines} />
+
+                        <div className='mt-4 space-y-2 rounded-lg border border-cyan-200 bg-white p-3'>
+                            <p className='text-xs font-medium uppercase tracking-wide text-cyan-900'>Added Medicines</p>
+                            {medicines.length === 0 ? (
+                                <p className='text-sm text-cyan-800/70'>No medicines added yet.</p>
+                            ) : (
+                                <ul className='space-y-1 text-sm text-slate-700'>
+                                    {medicines.map((item, index) => (
+                                        <li key={`${item.medicine}-${item.consumption}-${item.days}-${index}`}>
+                                            {index + 1}. {item.medicine} - {item.consumption} - {item.days} day(s)
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
 
                         <div className='mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end'>
                             <Button variant='outline' onClick={() => router.push('/dashboard/todays-appointments')}>
@@ -130,7 +153,7 @@ const PatientInfo = () => {
                             </Button>
                             <Button
                                 onClick={handleAppointPatient}
-                                disabled={isSubmitting || !medicines.trim()}
+                                disabled={isSubmitting || medicines.length === 0}
                                 className='bg-cyan-700 text-white hover:bg-cyan-800'
                             >
                                 {isSubmitting ? 'Saving...' : 'Save Medicines & Mark Appointed'}

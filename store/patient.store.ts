@@ -103,6 +103,7 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
             }
         } catch (error) {
             toast.error("Something went wrong");
+            console.log(error)
         }
     },
 

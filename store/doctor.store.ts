@@ -1,6 +1,6 @@
 import { Doctors, Hospitals, Patients } from "@/config/schema";
 import bcrypt from 'bcryptjs';
-import { and, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { db } from "../config/index";
@@ -42,7 +42,13 @@ interface DoctorLoginInput {
     password: string;
 }
 
+interface WeeklyAppointments {
+    day: string;
+    appointments: number
+}
+
 interface DOCTORSTOREINTERFACE {
+    // variables
     user: DOCTORTYPE | null,
     token: string | null,
     isAdmin: boolean;
@@ -50,6 +56,8 @@ interface DOCTORSTOREINTERFACE {
     appointedPaitentsList: APPOINTMENTS[],
     appointmentList: APPOINTMENTS[];
     selectedPatient: APPOINTMENTS | null;
+    weeklyAppointmentsData: WeeklyAppointments[];
+    // functions
     signup: (input: DoctorSignupInput) => Promise<void>;
     login: (input: DoctorLoginInput) => Promise<void>;
     checkAuth: () => void;
@@ -59,6 +67,7 @@ interface DOCTORSTOREINTERFACE {
     appointPatient: (id: string, medicines: string) => Promise<void>;
     updateProfile: (input: any) => Promise<void>;
     getAppointedPatientList: () => Promise<void>;
+    getWeeklyAppointments: () => Promise<void>;
 }
 
 const authMiddleware = async () => {
@@ -97,6 +106,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     isCheckingUser: true,
     appointmentList: [],
     appointedPaitentsList: [],
+    weeklyAppointmentsData: [],
     selectedPatient: null,
     // signup controller
     signup: async (input: DoctorSignupInput) => {
@@ -288,10 +298,10 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 .where(
                     and(
                         eq(Patients.hospital, Number(get().user?.hospital?.id)),
-                        eq(Patients.isAppointed, false),
                         eq(Patients.appointmentDate, new Date().toISOString().split('T')[0])
                     )
-                );
+                ).orderBy(asc(Patients.isAppointed))
+                ;
             const normalizedAppointments: APPOINTMENTS[] = response
                 .filter((item) => item.id !== null)
                 .map((item) => ({
@@ -316,6 +326,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                         : null,
                     isAppointed: item.isAppointed ?? false,
                 }))
+                console.log(normalizedAppointments)
 
             set({ appointmentList: normalizedAppointments })
         } catch (error) {
@@ -334,16 +345,16 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     // appoint Patient
     appointPatient: async (id, medicines) => {
         try {
+            const medicineInput = JSON.stringify(medicines);
             const response = await db.update(Patients)
                 .set({
-                    medicines: medicines,
+                    medicines: medicineInput,
                     isAppointed: true,
+                    appointedBy: get().user?.id
                 })
                 .where(eq(Patients.id, Number(id)))
                 .returning()
-
             if (response) {
-                set({ selectedPatient: null })
                 toast.success("Patient Appointed Successfully")
             }
         } catch (error) {
@@ -446,5 +457,60 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
             console.log(error);
         }
     },
+
+    getWeeklyAppointments: async () => {
+        try {
+            const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const emptyWeekData: WeeklyAppointments[] = dayLabels.map((day) => ({ day, appointments: 0 }));
+            const currentUser = get().user;
+
+            if (!currentUser?.id || !currentUser?.hospital?.id) {
+                set({ weeklyAppointmentsData: emptyWeekData });
+                return;
+            }
+
+            const now = new Date();
+            const startOfWeek = new Date(now);
+            const mondayOffset = (startOfWeek.getDay() + 6) % 7;
+            startOfWeek.setDate(startOfWeek.getDate() - mondayOffset);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(endOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            const response = await db.select({
+                appointmentDate: Patients.appointmentDate,
+            })
+                .from(Patients)
+                .where(
+                    and(
+                        eq(Patients.hospital, Number(currentUser.hospital.id)),
+                        gte(Patients.appointmentDate, startOfWeek.toISOString().split("T")[0]),
+                        lte(Patients.appointmentDate, endOfWeek.toISOString().split("T")[0])
+                    )
+                );
+
+            const appointmentsPerDay = [0, 0, 0, 0, 0, 0, 0];
+
+            response.forEach((item) => {
+                if (!item.appointmentDate) return;
+                const appointmentDate = new Date(item.appointmentDate as unknown as string);
+                if (Number.isNaN(appointmentDate.getTime())) return;
+
+                const dayIndex = (appointmentDate.getDay() + 6) % 7;
+                appointmentsPerDay[dayIndex] += 1;
+            });
+
+            const weeklyAppointmentsData: WeeklyAppointments[] = dayLabels.map((day, index) => ({
+                day,
+                appointments: appointmentsPerDay[index],
+            }));
+
+            set({ weeklyAppointmentsData });
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
 }))

@@ -36,6 +36,15 @@ export const qualifications = [
     "MRCP",
 ]
 
+// conumptions
+export const consumption = [
+    "Twice a day: Morning-Evening",
+    "Once a day",
+    "Morning",
+    "Night",
+    "Empty Stomach",
+]
+
 // Replace with actual hospital data from your backend
 export const hospitals = [
     "City General Hospital",

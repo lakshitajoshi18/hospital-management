@@ -26,22 +26,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-
-const todayAppointmentData = [
-  { status: "Completed", count: 18, fill: "var(--color-completed)" },
-  { status: "Pending", count: 8, fill: "var(--color-pending)" },
-  { status: "Cancelled", count: 3, fill: "var(--color-cancelled)" },
-]
-
-const weeklyAppointmentData = [
-  { day: "Mon", appointments: 16 },
-  { day: "Tue", appointments: 21 },
-  { day: "Wed", appointments: 18 },
-  { day: "Thu", appointments: 24 },
-  { day: "Fri", appointments: 20 },
-  { day: "Sat", appointments: 14 },
-  { day: "Sun", appointments: 9 },
-]
+import { useDoctorStore } from "@/store/doctor.store"
+import { useEffect } from "react"
 
 const patientStatusData = [
   { type: "Appointed", value: 132, fill: "var(--color-appointed)" },
@@ -82,12 +68,52 @@ const patientStatusConfig = {
 } satisfies ChartConfig
 
 const DashboardPage = () => {
+
+  const { weeklyAppointmentsData, getWeeklyAppointments, appointmentList, getAppointmentList } = useDoctorStore();
+
+  useEffect(() => {
+    if (weeklyAppointmentsData.length === 0) {
+      getWeeklyAppointments();
+    }
+
+    if (appointmentList.length === 0) {
+      getAppointmentList();
+    }
+  }, [weeklyAppointmentsData, appointmentList, getWeeklyAppointments, getAppointmentList])
+
+  const statusCounts = appointmentList.reduce(
+    (acc, appointment) => {
+      const rawStatus = (appointment as { status?: string }).status?.toLowerCase();
+
+      if (rawStatus === "completed") {
+        acc.completed += 1;
+      } else if (rawStatus === "cancelled") {
+        acc.cancelled += 1;
+      } else if (rawStatus === "pending") {
+        acc.pending += 1;
+      } else if (appointment.isAppointed) {
+        acc.completed += 1;
+      } else {
+        acc.pending += 1;
+      }
+
+      return acc;
+    },
+    { completed: 0, pending: 0, cancelled: 0 }
+  )
+
+  const todayAppointmentData = [
+    { status: "Completed", count: statusCounts.completed, fill: "var(--color-completed)" },
+    { status: "Pending", count: statusCounts.pending, fill: "var(--color-pending)" },
+    { status: "Cancelled", count: statusCounts.cancelled, fill: "var(--color-cancelled)" },
+  ]
+
   const todayTotalAppointments = todayAppointmentData.reduce(
     (sum, item) => sum + item.count,
     0
   )
 
-  const weeklyTotalAppointments = weeklyAppointmentData.reduce(
+  const weeklyTotalAppointments = weeklyAppointmentsData.reduce(
     (sum, item) => sum + item.appointments,
     0
   )
@@ -145,7 +171,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={weeklyAppointmentsConfig} className="max-h-80 w-full">
-              <BarChart accessibilityLayer data={weeklyAppointmentData} margin={{ left: 8, right: 8 }}>
+              <BarChart accessibilityLayer data={weeklyAppointmentsData} margin={{ left: 8, right: 8 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="day"

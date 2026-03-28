@@ -63,3 +63,9 @@ export type APPOINTMENTS = {
     } | null
     isAppointed: boolean
 }
+
+export type MEDICINETYPES = {
+    medicine: string
+    consumption: string
+    days: number
+}
