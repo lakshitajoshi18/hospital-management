@@ -326,7 +326,6 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                         : null,
                     isAppointed: item.isAppointed ?? false,
                 }))
-                console.log(normalizedAppointments)
 
             set({ appointmentList: normalizedAppointments })
         } catch (error) {
