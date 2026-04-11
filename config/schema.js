@@ -1,4 +1,4 @@
-import { boolean, date, integer, pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, doublePrecision, integer, pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
 
 export const Doctors = pgTable("doctors",
     {
@@ -47,6 +47,9 @@ export const Hospitals = pgTable("hospitals",
         operatingHours: varchar("operatingHours"),
         emergencyAvailable: boolean("emergencyAvailable").notNull().default(false),
         description: text("description"),
+        location: varchar("location"),
+        latitude: doublePrecision("latitude"),
+        longitude: doublePrecision("longitude"),
     }
 )
 

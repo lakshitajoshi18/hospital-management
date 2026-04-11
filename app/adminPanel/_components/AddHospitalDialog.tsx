@@ -1,5 +1,6 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -30,6 +31,10 @@ import { HospitalFormData } from "@/types"
 import { PlusCircle } from "lucide-react"
 import { useState } from "react"
 
+const HospitalLocationMap = dynamic(() => import("./HospitalLocationMap"), {
+    ssr: false,
+})
+
 const initialFormData: HospitalFormData = {
     name: "",
     registrationNumber: "",
@@ -46,6 +51,8 @@ const initialFormData: HospitalFormData = {
     oxygenCylinders: "",
     ventilators: "",
     ambulances: "",
+    latitude: "",
+    longitude: "",
     hasXray: false,
     hasMRI: false,
     hasUltrasound: false,
@@ -89,6 +96,14 @@ const AddHospitalDialog = () => {
         }
 
         setIsSubmitting(false)
+    }
+
+    const handleMapChange = (coordinates: { latitude: string; longitude: string }) => {
+        setFormData((prev) => ({
+            ...prev,
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+        }))
     }
 
     return (
@@ -283,6 +298,49 @@ const AddHospitalDialog = () => {
                                         onChange={(e) => updateField("website", e.target.value)}
                                         className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                     />
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* ── Location Pin ── */}
+                        <section>
+                            <h3 className="text-sm font-semibold text-green-700 uppercase tracking-wide mb-3">
+                                Hospital Location
+                            </h3>
+                            <Separator className="bg-green-200 mb-4" />
+                            <div className="space-y-4">
+                                <HospitalLocationMap
+                                    value={{
+                                        latitude: formData.latitude ?? "",
+                                        longitude: formData.longitude ?? "",
+                                    }}
+                                    onChange={handleMapChange}
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="latitude" className="text-green-800">
+                                            Latitude
+                                        </Label>
+                                        <Input
+                                            id="latitude"
+                                            value={formData.latitude ?? ""}
+                                            placeholder="Click map to fill latitude"
+                                            readOnly
+                                            className="border-green-300 bg-green-50 focus-visible:border-green-500 focus-visible:ring-green-500/30"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="longitude" className="text-green-800">
+                                            Longitude
+                                        </Label>
+                                        <Input
+                                            id="longitude"
+                                            value={formData.longitude ?? ""}
+                                            placeholder="Click map to fill longitude"
+                                            readOnly
+                                            className="border-green-300 bg-green-50 focus-visible:border-green-500 focus-visible:ring-green-500/30"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </section>

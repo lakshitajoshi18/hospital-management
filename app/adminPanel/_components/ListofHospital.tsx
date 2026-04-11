@@ -48,6 +48,8 @@ type HospitalRecord = {
     operatingHours: string
     emergencyAvailable: boolean
     description: string
+    latitude?: number | null
+    longitude?: number | null
 }
 
 const dummyHospitals: HospitalRecord[] = [
@@ -208,6 +210,8 @@ const ListofHospital = () => {
         operatingHours: hospital.operatingHours,
         emergencyAvailable: hospital.emergencyAvailable,
         description: hospital.description,
+        latitude: hospital.latitude ? String(hospital.latitude) : "",
+        longitude: hospital.longitude ? String(hospital.longitude) : "",
     })
 
     const mapToHospital = (id: number, values: HospitalFormData): HospitalRecord => ({
@@ -238,6 +242,8 @@ const ListofHospital = () => {
         operatingHours: values.operatingHours,
         emergencyAvailable: values.emergencyAvailable,
         description: values.description,
+        latitude: values.latitude ? Number(values.latitude) : null,
+        longitude: values.longitude ? Number(values.longitude) : null,
     })
 
     const handleOpenEdit = (hospital: HospitalRecord) => {

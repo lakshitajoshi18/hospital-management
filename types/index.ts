@@ -25,6 +25,8 @@ export interface HospitalFormData {
     operatingHours: string
     emergencyAvailable: boolean
     description: string
+    latitude?: string
+    longitude?: string
 }
 
 export type DOCTORTYPE = {

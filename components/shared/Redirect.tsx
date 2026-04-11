@@ -10,7 +10,7 @@ const Redirect = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+  }, [user]);
   if (isCheckingUser)
     return (
       <div className="flex justify-center items-center h-[calc(100vh-100px)]">
@@ -19,7 +19,6 @@ const Redirect = ({ children }: { children: React.ReactNode }) => {
     );
   if (path.includes("/login") && user) return redirect("/");
   if (path.includes("/signup") && user) return redirect("/");
-  if (path.includes("/adminPanel") && !isAdmin) return redirect("/");
   return children;
 };
 
