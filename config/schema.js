@@ -46,10 +46,7 @@ export const Hospitals = pgTable("hospitals",
         departments: text("departments").array(),
         operatingHours: varchar("operatingHours"),
         emergencyAvailable: boolean("emergencyAvailable").notNull().default(false),
-        description: text("description"),
-        location: varchar("location"),
-        latitude: doublePrecision("latitude"),
-        longitude: doublePrecision("longitude"),
+        description: text("description")
     }
 )
 

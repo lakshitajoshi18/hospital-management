@@ -255,6 +255,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
             if (user) {
                 set({ user, isCheckingUser: false });
                 const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(user.phone!);
+                console.log(isAdminId)
                 set({ isAdmin: isAdminId });
             }
         } catch (error) {
@@ -271,7 +272,12 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     // get appointment list 
     getAppointmentList: async () => {
         try {
-            if (!get().user) return;
+            const currentUser = get().user;
+            if (!currentUser?.id || !currentUser?.hospital?.id) {
+                console.warn("getAppointmentList skipped because user or hospital data is missing", currentUser);
+                set({ appointmentList: [] });
+                return;
+            }
             const response = await db.select({
                 id: Patients.id,
                 name: Patients.name,
@@ -297,7 +303,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
                 .where(
                     and(
-                        eq(Patients.hospital, Number(get().user?.hospital?.id)),
+                        eq(Patients.hospital, Number(currentUser.hospital.id)),
                         eq(Patients.appointmentDate, new Date().toISOString().split('T')[0])
                     )
                 ).orderBy(asc(Patients.isAppointed))
@@ -396,6 +402,13 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     // get appointed Patients
     getAppointedPatientList: async () => {
         try {
+            const currentUser = get().user;
+            if (!currentUser?.id || !currentUser?.hospital?.id) {
+                console.warn("getAppointedPatientList skipped because user or hospital data is missing", currentUser);
+                set({ appointedPaitentsList: [] });
+                return;
+            }
+
             const response = await db.select({
                 id: Patients.id,
                 name: Patients.name,
@@ -421,8 +434,8 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
                 .where(
                     and(
-                        eq(Patients.appointedBy, Number(get().user?.id)),
-                        eq(Patients.hospital, Number(get().user?.hospital?.id)),
+                        eq(Patients.appointedBy, Number(currentUser.id)),
+                        eq(Patients.hospital, Number(currentUser.hospital.id)),
                         eq(Patients.isAppointed, true)
                     )
                 );

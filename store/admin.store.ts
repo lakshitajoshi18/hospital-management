@@ -64,8 +64,6 @@ export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
                 numberOfBeds: Number(input.numberOfBeds) || 0,
                 operatingHours: input.operatingHours || null,
                 oxygenCylinders: Number(input.oxygenCylinders) || 0,
-                latitude: input.latitude ? Number(input.latitude) : null,
-                longitude: input.longitude ? Number(input.longitude) : null,
                 ventilators: Number(input.ventilators) || 0,
             }).returning();
 

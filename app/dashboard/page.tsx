@@ -79,7 +79,7 @@ const DashboardPage = () => {
     if (appointmentList.length === 0) {
       getAppointmentList();
     }
-  }, [weeklyAppointmentsData, appointmentList, getWeeklyAppointments, getAppointmentList])
+  }, [])
 
   const statusCounts = appointmentList.reduce(
     (acc, appointment) => {
