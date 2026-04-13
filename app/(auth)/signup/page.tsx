@@ -34,9 +34,7 @@ import {
 } from "lucide-react"
 import { qualifications, specializations } from "@/constants"
 import Link from "next/link"
-import { Hospitals } from "@/config/schema"
 import { useDoctorStore } from "@/store/doctor.store"
-import { db } from "@/config"
 import { useRouter } from "next/navigation"
 
 type HospitalOption = {
@@ -109,13 +107,13 @@ const SignupPage = () => {
 
         const loadHospitals = async () => {
             try {
-                const data = await db
-                    .select({
-                        id: Hospitals.id,
-                        name: Hospitals.name,
-                    })
-                    .from(Hospitals)
-
+                const response = await fetch('/api/hospitals', {
+                    cache: 'no-store',
+                })
+                if (!response.ok) {
+                    throw new Error('Unable to load hospitals')
+                }
+                const data = await response.json()
                 if (active) {
                     setHospitalOptions(data)
                 }

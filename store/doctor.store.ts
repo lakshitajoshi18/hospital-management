@@ -1,9 +1,6 @@
-import { Doctors, Hospitals, Patients } from "@/config/schema";
-import bcrypt from 'bcryptjs';
-import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { toast } from "sonner";
 import { create } from "zustand";
-import { db } from "../config/index";
+import { clientFetch } from "@/lib/api-client";
 import { APPOINTMENTS, DOCTORTYPE } from "@/types";
 
 const DOCTOR_TOKEN_KEY = "doctorToken";
@@ -13,18 +10,7 @@ const createDoctorToken = (doctorId: string | null) => {
     return String(doctorId);
 }
 
-const parseDoctorIdFromToken = (token: string) => {
-    const doctorId = (token);
-    return doctorId;
-}
-
-const generateUUID = () => {
-    if (typeof globalThis !== "undefined" && globalThis.crypto?.randomUUID) {
-        return globalThis.crypto.randomUUID();
-    }
-
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
+const parseDoctorIdFromToken = (token: string) => token;
 
 interface DoctorSignupInput {
     name: string;
@@ -76,27 +62,13 @@ const authMiddleware = async () => {
     const doctorId = parseDoctorIdFromToken(token);
     if (!doctorId) return null;
 
-    const user = await db.select({
-        uid: Doctors.uid,
-        id: Doctors.id,
-        name: Doctors.name,
-        specialization: Doctors.specialization,
-        experience: Doctors.experience,
-        qualification: Doctors.qualification,
-        hospital: {
-            id: Hospitals.id,
-            name: Hospitals.name
-        },
-        phone: Doctors.phone,
-        city: Doctors.city,
-        isVerified: Doctors.isVerified,
-        patientsAppointed: Doctors.patientsAppointed
-    }).from(Doctors)
-        .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
-        .where(eq(Doctors.uid, doctorId));
-
-    if (!user) return null;
-    return user[0];
+    try {
+        const response = await clientFetch(`/api/doctors/me?uid=${encodeURIComponent(doctorId)}`)
+        return response || null
+    } catch (error) {
+        console.error(error)
+        return null
+    }
 }
 
 export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
@@ -112,73 +84,27 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     signup: async (input: DoctorSignupInput) => {
         try {
             if (!(input.name && input.hospital && input.experience && input.specialization && input.qualification && input.phone && input.password)) {
-                toast.error("Please fill all the fields");
+                toast.error('Please fill all the fields');
                 return;
             }
 
-            const existingUser = await db.select({
-                id: Doctors.id,
-                phone: Doctors.phone
-            }).from(Doctors).where(eq(Doctors.phone, input.phone));
-            if (existingUser.length > 0) {
-                toast.error("User with same phone number already exists");
-                return;
-            }
+            const response = await clientFetch('/api/doctors/signup', {
+                method: 'POST',
+                body: JSON.stringify(input),
+            })
 
-            const hashedPassword = await bcrypt.hash(input.password, 10);
-            const uid = generateUUID();
-
-            // check if user id in the list of admin ids
-            const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(input.phone);
-
-            await db.insert(Doctors).values({
-                uid: uid,
-                hospital: input.hospital,
-                name: input.name,
-                experience: input.experience,
-                specialization: input.specialization,
-                qualification: input.qualification,
-                phone: input.phone,
-                password: hashedPassword,
-                city: input.city,
-                isVerified: isAdminId ? true : false
-            }).then(async () => {
-                const response = await db.select({
-                    uid: Doctors.uid,
-                    id: Doctors.id,
-                    name: Doctors.name,
-                    specialization: Doctors.specialization,
-                    experience: Doctors.experience,
-                    qualification: Doctors.qualification,
-                    hospital: {
-                        id: Hospitals.id,
-                        name: Hospitals.name
-                    },
-                    phone: Doctors.phone,
-                    city: Doctors.city,
-                    isVerified: Doctors.isVerified,
-                    patientsAppointed: Doctors.patientsAppointed
-                })
-                    .from(Doctors)
-                    .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
-                    .where(eq(Doctors.phone, input.phone))
-                    .limit(1);
-
-                // if User get the response
-                if (response.length > 0) {
-                    const token = createDoctorToken(response[0].uid);
-
-                    if (token) {
-                        set({ token });
-                        localStorage.setItem(DOCTOR_TOKEN_KEY, token);
-                    }
-                    toast.success("Doctor Registered Successfully");
-                    set({ user: response[0], isAdmin: isAdminId });
+            if (response.user) {
+                const token = createDoctorToken(response.user.uid);
+                if (token) {
+                    set({ token });
+                    localStorage.setItem(DOCTOR_TOKEN_KEY, token);
                 }
-            });
-
+                const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(input.phone);
+                set({ user: response.user, isAdmin: isAdminId });
+                toast.success('Doctor Registered Successfully');
+            }
         } catch (error) {
-            toast.error("Something went wrong");
+            toast.error('Something went wrong');
             console.log(error)
         }
     },
@@ -186,63 +112,30 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     login: async (input: DoctorLoginInput) => {
         try {
             if (!(input.phone && input.password)) {
-                toast.warning("Please fill all the fields")
+                toast.warning('Please fill all the fields')
                 return;
             }
 
-            // find user in the database
-            const existingUser = await db.select({
-                uid: Doctors.uid,
-                id: Doctors.id,
-                name: Doctors.name,
-                specialization: Doctors.specialization,
-                experience: Doctors.experience,
-                qualification: Doctors.qualification,
-                hospital: {
-                    id: Hospitals.id,
-                    name: Hospitals.name
-                },
-                phone: Doctors.phone,
-                city: Doctors.city,
-                isVerified: Doctors.isVerified,
-                patientsAppointed: Doctors.patientsAppointed,
-                password: Doctors.password
-            }).from(Doctors)
-                .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
-                .where(eq(
-                    Doctors.phone, input.phone
-                ))
-                .limit(1);
+            const response = await clientFetch('/api/doctors/login', {
+                method: 'POST',
+                body: JSON.stringify(input),
+            })
 
-            if (existingUser.length === 0) {
-                toast.error("User not found");
-                return
-            }
-
-            // compare the password of user and input
-            const isMatch = await bcrypt.compare(input.password, existingUser[0].password!);
-            if (!isMatch) {
-                toast.error("Incorrect Password");
-                return
-            }
-
-            // create a client-safe auth token from doctor id
-            const token = createDoctorToken(existingUser[0].uid);
-            if (token) {
-                set({ token });
-                localStorage.setItem(DOCTOR_TOKEN_KEY, token);
-            }
-            if (existingUser[0]) {
-                const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(existingUser[0].phone!);
-                console.log(isAdminId === true)
+            if (response?.user) {
+                const token = createDoctorToken(response.user.uid);
+                if (token) {
+                    set({ token });
+                    localStorage.setItem(DOCTOR_TOKEN_KEY, token);
+                }
+                const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(response.user.phone);
                 set({
-                    user: existingUser[0],
-                    isAdmin: isAdminId
+                    user: response.user,
+                    isAdmin: isAdminId,
                 });
             }
         }
         catch (error) {
-            toast.error("Something went wrong");
+            toast.error('Something went wrong');
             console.log(error)
         }
     },
@@ -255,7 +148,6 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
             if (user) {
                 set({ user, isCheckingUser: false });
                 const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(user.phone!);
-                console.log(isAdminId)
                 set({ isAdmin: isAdminId });
             }
         } catch (error) {
@@ -274,68 +166,19 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         try {
             const currentUser = get().user;
             if (!currentUser?.id || !currentUser?.hospital?.id) {
-                console.warn("getAppointmentList skipped because user or hospital data is missing", currentUser);
+                console.warn('getAppointmentList skipped because user or hospital data is missing', currentUser);
                 set({ appointmentList: [] });
                 return;
             }
-            const response = await db.select({
-                id: Patients.id,
-                name: Patients.name,
-                age: Patients.age,
-                gender: Patients.gender,
-                address: Patients.address,
-                problem: Patients.problem,
-                mobile: Patients.mobile,
-                appointmentDate: Patients.appointmentDate,
-                medicines: Patients.medicines,
-                hospital: {
-                    id: Hospitals.id,
-                    name: Hospitals.name
-                },
-                appointedBy: {
-                    id: Doctors.id,
-                    name: Doctors.name
-                },
-                isAppointed: Patients.isAppointed
-            })
-                .from(Patients)
-                .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
-                .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
-                .where(
-                    and(
-                        eq(Patients.hospital, Number(currentUser.hospital.id)),
-                        eq(Patients.appointmentDate, new Date().toISOString().split('T')[0])
-                    )
-                ).orderBy(asc(Patients.isAppointed))
-                ;
-            const normalizedAppointments: APPOINTMENTS[] = response
-                .filter((item) => item.id !== null)
-                .map((item) => ({
-                    id: item.id ?? 0,
-                    name: item.name ?? "Unknown Patient",
-                    age: item.age ?? 0,
-                    gender: item.gender ?? "other",
-                    address: item.address,
-                    problem: item.problem ?? "Not specified",
-                    mobile: item.mobile ?? "N/A",
-                    appointmentDate: item.appointmentDate ?? new Date().toISOString().split('T')[0],
-                    medicines: item.medicines,
-                    hospital: {
-                        id: item.hospital?.id ?? 0,
-                        name: item.hospital?.name ?? "Unknown Hospital"
-                    },
-                    appointedBy: item.appointedBy?.id
-                        ? {
-                            id: item.appointedBy.id,
-                            name: item.appointedBy.name ?? "Unknown Doctor"
-                        }
-                        : null,
-                    isAppointed: item.isAppointed ?? false,
-                }))
 
-            set({ appointmentList: normalizedAppointments })
+            const response = await clientFetch<APPOINTMENTS[]>(
+                `/api/doctors/appointments?doctorId=${encodeURIComponent(String(currentUser.id))}&hospitalId=${encodeURIComponent(String(currentUser.hospital.id))}&date=${encodeURIComponent(new Date().toISOString().split('T')[0])}`
+            )
+
+            set({ appointmentList: response })
         } catch (error) {
             console.log(error);
+            set({ appointmentList: [] });
         }
     },
     // select patient
@@ -351,17 +194,15 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     appointPatient: async (id, medicines) => {
         try {
             const medicineInput = JSON.stringify(medicines);
-            const response = await db.update(Patients)
-                .set({
+            await clientFetch('/api/doctors/appoint', {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: Number(id),
                     medicines: medicineInput,
-                    isAppointed: true,
-                    appointedBy: get().user?.id
-                })
-                .where(eq(Patients.id, Number(id)))
-                .returning()
-            if (response) {
-                toast.success("Patient Appointed Successfully")
-            }
+                    appointedBy: get().user?.id,
+                }),
+            })
+            toast.success('Patient Appointed Successfully')
         } catch (error) {
             console.log(error)
         }
@@ -369,32 +210,18 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
     // update Profile
     updateProfile: async (input) => {
         try {
-            await db.update(Doctors)
-                .set(input)
-                .where(eq(Doctors.id, Number(get().user?.id)))
-                .returning().then(async () => {
-                    const res = await db.select({
-                        id: Doctors.id,
-                        name: Doctors.name,
-                        specialization: Doctors.specialization,
-                        experience: Doctors.experience,
-                        qualification: Doctors.qualification,
-                        hospital: {
-                            id: Hospitals.id,
-                            name: Hospitals.name
-                        },
-                        phone: Doctors.phone,
-                        city: Doctors.city,
-                        isVerified: Doctors.isVerified,
-                        patientsAppointed: Doctors.patientsAppointed
-                    }).from(Doctors)
-                        .fullJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
-                        .where(eq(Doctors.id, Number(get().user?.id))).limit(1);
-                    if (res) {
-                        set({ user: res[0] })
-                        toast.success("Profile Updated Successfully");
-                    }
-                })
+            const response = await clientFetch('/api/doctors/profile', {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    id: get().user?.id,
+                    ...input,
+                }),
+            })
+
+            if (response?.user) {
+                set({ user: response.user })
+                toast.success('Profile Updated Successfully');
+            }
         } catch (error) {
             console.log(error)
         }
@@ -404,69 +231,19 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         try {
             const currentUser = get().user;
             if (!currentUser?.id || !currentUser?.hospital?.id) {
-                console.warn("getAppointedPatientList skipped because user or hospital data is missing", currentUser);
+                console.warn('getAppointedPatientList skipped because user or hospital data is missing', currentUser);
                 set({ appointedPaitentsList: [] });
                 return;
             }
 
-            const response = await db.select({
-                id: Patients.id,
-                name: Patients.name,
-                age: Patients.age,
-                gender: Patients.gender,
-                address: Patients.address,
-                problem: Patients.problem,
-                mobile: Patients.mobile,
-                appointmentDate: Patients.appointmentDate,
-                medicines: Patients.medicines,
-                hospital: {
-                    id: Hospitals.id,
-                    name: Hospitals.name
-                },
-                appointedBy: {
-                    id: Doctors.id,
-                    name: Doctors.name
-                },
-                isAppointed: Patients.isAppointed
-            })
-                .from(Patients)
-                .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
-                .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
-                .where(
-                    and(
-                        eq(Patients.appointedBy, Number(currentUser.id)),
-                        eq(Patients.hospital, Number(currentUser.hospital.id)),
-                        eq(Patients.isAppointed, true)
-                    )
-                );
-            const normalizedAppointments: APPOINTMENTS[] = response
-                .filter((item) => item.id !== null)
-                .map((item) => ({
-                    id: item.id ?? 0,
-                    name: item.name ?? "Unknown Patient",
-                    age: item.age ?? 0,
-                    gender: item.gender ?? "other",
-                    address: item.address,
-                    problem: item.problem ?? "Not specified",
-                    mobile: item.mobile ?? "N/A",
-                    appointmentDate: item.appointmentDate ?? new Date().toISOString().split('T')[0],
-                    medicines: item.medicines,
-                    hospital: {
-                        id: item.hospital?.id ?? 0,
-                        name: item.hospital?.name ?? "Unknown Hospital"
-                    },
-                    appointedBy: item.appointedBy?.id
-                        ? {
-                            id: item.appointedBy.id,
-                            name: item.appointedBy.name ?? "Unknown Doctor"
-                        }
-                        : null,
-                    isAppointed: item.isAppointed ?? false,
-                }))
+            const response = await clientFetch<APPOINTMENTS[]>(
+                `/api/doctors/appointed-patients?doctorId=${encodeURIComponent(String(currentUser.id))}&hospitalId=${encodeURIComponent(String(currentUser.hospital.id))}`
+            )
 
-            set({ appointedPaitentsList: normalizedAppointments })
+            set({ appointedPaitentsList: response })
         } catch (error) {
             console.log(error);
+            set({ appointedPaitentsList: [] });
         }
     },
 
@@ -491,17 +268,9 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
             endOfWeek.setDate(endOfWeek.getDate() + 6);
             endOfWeek.setHours(23, 59, 59, 999);
 
-            const response = await db.select({
-                appointmentDate: Patients.appointmentDate,
-            })
-                .from(Patients)
-                .where(
-                    and(
-                        eq(Patients.hospital, Number(currentUser.hospital.id)),
-                        gte(Patients.appointmentDate, startOfWeek.toISOString().split("T")[0]),
-                        lte(Patients.appointmentDate, endOfWeek.toISOString().split("T")[0])
-                    )
-                );
+            const response = await clientFetch<{ appointmentDate: string }[]>(
+                `/api/doctors/weekly-appointments?hospitalId=${encodeURIComponent(String(currentUser.hospital.id))}&start=${encodeURIComponent(startOfWeek.toISOString().split('T')[0])}&end=${encodeURIComponent(endOfWeek.toISOString().split('T')[0])}`
+            );
 
             const appointmentsPerDay = [0, 0, 0, 0, 0, 0, 0];
 
