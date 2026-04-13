@@ -3,7 +3,11 @@ import { db } from '@/config'
 import { Doctors, Hospitals, Patients } from '@/config/schema'
 import { eq } from 'drizzle-orm'
 
-export async function GET(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').filter(Boolean).pop() || ''
   const url = request.nextUrl
 
@@ -26,10 +30,10 @@ export async function GET(request: NextRequest, { params }: { params?: { action?
       medicines: Patients.medicines,
       status: Patients.isAppointed
     })
-    .from(Patients)
-    .leftJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
-    .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
-    .where(eq(Patients.mobile, mobile))
+      .from(Patients)
+      .leftJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
+      .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
+      .where(eq(Patients.mobile, mobile))
     return NextResponse.json(data)
   }
 
@@ -45,7 +49,11 @@ export async function GET(request: NextRequest, { params }: { params?: { action?
   return NextResponse.json({ error: 'Action not found' }, { status: 404 })
 }
 
-export async function POST(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').filter(Boolean).pop() || ''
   const body = await request.json()
   console.log('POST patient action', action, body)
@@ -79,7 +87,11 @@ export async function POST(request: NextRequest, { params }: { params?: { action
   return NextResponse.json({ error: 'Action not found' }, { status: 404 })
 }
 
-export async function DELETE(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').filter(Boolean).pop() || ''
   const body = await request.json()
 
@@ -94,7 +106,11 @@ export async function DELETE(request: NextRequest, { params }: { params?: { acti
   return NextResponse.json({ error: 'Action not found' }, { status: 404 })
 }
 
-export async function PATCH(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').filter(Boolean).pop() || ''
   const body = await request.json()
 

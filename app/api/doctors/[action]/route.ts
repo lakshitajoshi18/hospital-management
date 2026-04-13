@@ -40,14 +40,18 @@ const normalizeAppointments = (rows: any[]) =>
       },
       appointedBy: item.appointedBy?.id
         ? {
-            id: item.appointedBy.id,
-            name: item.appointedBy.name ?? 'Unknown Doctor',
-          }
+          id: item.appointedBy.id,
+          name: item.appointedBy.name ?? 'Unknown Doctor',
+        }
         : null,
       isAppointed: item.isAppointed ?? false,
     }))
 
-export async function GET(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').pop() || ''
   const url = request.nextUrl
 
@@ -187,7 +191,11 @@ export async function GET(request: NextRequest, { params }: { params?: { action?
   return NextResponse.json({ error: 'Action not found' }, { status: 404 })
 }
 
-export async function POST(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').pop() || ''
   const body = await request.json()
 
@@ -279,7 +287,11 @@ export async function POST(request: NextRequest, { params }: { params?: { action
   return NextResponse.json({ error: 'Action not found' }, { status: 404 })
 }
 
-export async function PATCH(request: NextRequest, { params }: { params?: { action?: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ action: string }> }
+) {
+  const params = await context.params
   const action = params?.action || request.nextUrl.pathname.split('/').pop() || ''
   const body = await request.json()
 
