@@ -22,6 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { usePatientStore } from "@/store/patient.store";
+import AppointmentDetailsDialog from "@/components/shared/AppointmentDetailsDialog";
 
 type Appointment = {
     id: string;
@@ -83,18 +85,22 @@ const appointments: Appointment[] = [
 ];
 
 const CheckAppointment = () => {
-    const [mobileInput, setMobileInput] = useState("7896541230");
-    const [searchedMobile, setSearchedMobile] = useState("7896541230");
+    const [mobileInput, setMobileInput] = useState("");
+    const [searchedMobile, setSearchedMobile] = useState("");
     const [open, setOpen] = useState(false);
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
 
+    const { getAppointmentList, list } = usePatientStore();
     const matchedAppointments = useMemo(
         () => appointments.filter((appointment) => appointment.mobile === searchedMobile.trim()),
         [searchedMobile]
     );
 
-    const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setSearchedMobile(mobileInput);
+        await getAppointmentList({ mobile: mobileInput });
         setOpen(true);
     };
 
@@ -158,7 +164,7 @@ const CheckAppointment = () => {
 
                     <div className="px-5 py-4 sm:px-6">
                         <ScrollArea className="h-[56vh]">
-                            {matchedAppointments.length > 0 ? (
+                            {list.length > 0 ? (
                                 <Table className="min-w-190">
                                     <TableHeader>
                                         <TableRow className="bg-cyan-50/70 hover:bg-cyan-50/70">
@@ -166,40 +172,44 @@ const CheckAppointment = () => {
                                             <TableHead>Patient</TableHead>
                                             <TableHead>Hospital</TableHead>
                                             <TableHead>Doctor</TableHead>
-                                            <TableHead>Date & Time</TableHead>
+                                            <TableHead>Date</TableHead>
                                             <TableHead>Problem</TableHead>
                                             <TableHead>Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {matchedAppointments.map((appointment) => (
-                                            <TableRow key={appointment.id} className="hover:bg-cyan-50/40">
+                                        {list.map((appointment) => (
+                                            <TableRow
+                                                key={appointment.id}
+                                                className="cursor-pointer hover:bg-cyan-50/60"
+                                                onClick={() => {
+                                                    setSelectedAppointment(appointment);
+                                                    setDetailsOpen(true);
+                                                }}
+                                            >
                                                 <TableCell className="font-medium text-slate-800">{appointment.id}</TableCell>
                                                 <TableCell>
                                                     <span className="inline-flex items-center gap-1.5 text-slate-700">
                                                         <UserRound className="size-4 text-cyan-700" />
-                                                        {appointment.patientName}
+                                                        {appointment.name}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-slate-700">{appointment.hospital}</TableCell>
                                                 <TableCell className="text-slate-700">{appointment.doctor}</TableCell>
                                                 <TableCell className="text-slate-700">
                                                     {appointment.date}
-                                                    <span className="text-slate-500"> ({appointment.time})</span>
+                                                    <span className="text-slate-500"> ({appointment.appointmentDate})</span>
                                                 </TableCell>
                                                 <TableCell className="max-w-55 truncate text-slate-700">{appointment.problem}</TableCell>
                                                 <TableCell>
-                                                    {appointment.status === "Confirmed" && (
+                                                    {appointment.status === true && (
                                                         <Badge className="bg-emerald-100 text-emerald-700">
                                                             <CheckCircle2 className="size-3.5" />
-                                                            Confirmed
+                                                            Completed
                                                         </Badge>
                                                     )}
-                                                    {appointment.status === "Pending" && (
+                                                    {appointment.status === false && (
                                                         <Badge className="bg-amber-100 text-amber-700">Pending</Badge>
-                                                    )}
-                                                    {appointment.status === "Completed" && (
-                                                        <Badge className="bg-cyan-100 text-cyan-700">Completed</Badge>
                                                     )}
                                                 </TableCell>
                                             </TableRow>
@@ -222,6 +232,12 @@ const CheckAppointment = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <AppointmentDetailsDialog
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                appointment={selectedAppointment}
+            />
         </section>
     );
 };

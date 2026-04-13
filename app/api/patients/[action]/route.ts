@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/config'
-import { Patients } from '@/config/schema'
+import { Doctors, Hospitals, Patients } from '@/config/schema'
 import { eq } from 'drizzle-orm'
 
 export async function GET(request: NextRequest, { params }: { params?: { action?: string } }) {
@@ -12,8 +12,25 @@ export async function GET(request: NextRequest, { params }: { params?: { action?
     if (!mobile) {
       return NextResponse.json({ error: 'mobile query is required' }, { status: 400 })
     }
-    const rows = await db.select().from(Patients).where(eq(Patients.mobile, mobile))
-    return NextResponse.json(rows)
+    const data = await db.select({
+      id: Patients.id,
+      name: Patients.name,
+      age: Patients.age,
+      gender: Patients.gender,
+      address: Patients.address,
+      problem: Patients.problem,
+      mobile: Patients.mobile,
+      appointmentDate: Patients.appointmentDate,
+      hospital: Hospitals.name,
+      doctor: Doctors.name,
+      medicines: Patients.medicines,
+      status: Patients.isAppointed
+    })
+    .from(Patients)
+    .leftJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
+    .fullJoin(Doctors, eq(Patients.appointedBy, Doctors.id))
+    .where(eq(Patients.mobile, mobile))
+    return NextResponse.json(data)
   }
 
   if (action === 'single') {
