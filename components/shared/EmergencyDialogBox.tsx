@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { usePatientStore } from "@/store/patient.store";
 
 type EmergencyDialogBoxProps = {
     triggerClassName?: string;
@@ -168,14 +169,14 @@ const boolLabel = (value: boolean) => (value ? "Available" : "Not available");
 const normalizeCity = (value: string) => value.trim().toLowerCase();
 
 const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
-    const [cityInput, setCityInput] = useState("pithoragarh");
-    const [cityQuery, setCityQuery] = useState("pithoragarh");
+    const {cityHospitalList, getCityHospitalList} = usePatientStore();
+    const [cityInput, setCityInput] = useState("");
 
-    const matchedHospitals = useMemo(
-        () => hospitals.filter((hospital) => normalizeCity(hospital.city) === normalizeCity(cityQuery)),
-        [cityQuery]
-    );
-
+    const searchHospitals = async () => {
+        if (cityInput.trim()) {
+            await getCityHospitalList(cityInput.trim());
+        }
+    };
     return (
         <Dialog>
             <DialogTrigger
@@ -213,7 +214,7 @@ const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
                         className="mt-3 flex flex-col gap-3 sm:flex-row"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            setCityQuery(cityInput);
+                            searchHospitals();
                         }}
                     >
                         <Input
@@ -237,14 +238,14 @@ const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
 
                 <div className="px-5 py-4 sm:px-6">
                     <p className="mb-3 text-sm text-slate-600">
-                        Showing results for <span className="font-semibold text-slate-900">{normalizeCity(cityQuery) || "city"}</span>
-                        : <span className="font-semibold text-cyan-800">{matchedHospitals.length}</span> hospitals found.
+                        Showing results for <span className="font-semibold text-slate-900">{cityInput || "city"}</span>
+                        : <span className="font-semibold text-cyan-800">{}</span> hospitals found.
                     </p>
 
                     <ScrollArea className="h-[56vh] pr-3">
                         <div className="space-y-4 pb-2">
-                            {matchedHospitals.length > 0 ? (
-                                matchedHospitals.map((hospital) => {
+                            {cityHospitalList.length > 0 ? (
+                                cityHospitalList.map((hospital) => {
                                     const bookingParams = new URLSearchParams({
                                         hospitalId: String(hospital.id),
                                         city: hospital.city,

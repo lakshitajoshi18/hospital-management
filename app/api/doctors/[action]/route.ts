@@ -16,7 +16,7 @@ const doctorSelect = {
     name: Hospitals.name,
   },
   phone: Doctors.phone,
-  city: Doctors.city,
+  city: Hospitals.city,
   isVerified: Doctors.isVerified,
   patientsAppointed: Doctors.patientsAppointed,
 }
@@ -55,6 +55,20 @@ export async function GET(
   const action = params?.action || request.nextUrl.pathname.split('/').pop() || ''
   const url = request.nextUrl
 
+  if(action === 'list') {
+    try {
+      const response = await db.select(doctorSelect)
+      .from(Doctors)
+      .leftJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
+      .where(eq(Doctors.isVerified, true))
+      return NextResponse.json(response)
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Unable to fetch doctors' },
+        { status: 500 }
+      )
+    }
+  }
   if (action === 'me') {
     const uid = url.searchParams.get('uid')
     if (!uid) {

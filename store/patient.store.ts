@@ -1,20 +1,18 @@
-import { DOCTORTYPE } from "@/types";
+import { DOCTORTYPE, HospitalListItem } from "@/types";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { clientFetch } from "@/lib/api-client";
 
-type HospitalListItem = {
-    id: number;
-    name: string;
-}
 
 interface PATIENTSTORENTERFACE {
     // variables
     list: any[],
     appointment: any,
     doctorList: DOCTORTYPE[]
-    hospitalList: HospitalListItem[]
-
+    hospitalList: HospitalListItem[],
+    cityHospitalList: HospitalListItem[],
+    
+    
     // functions
     getDoctorList: () => Promise<void>;
     getHospitalList: () => Promise<void>;
@@ -23,6 +21,7 @@ interface PATIENTSTORENTERFACE {
     getAppointmentList: (input: any) => Promise<void>;
     getSingleAppointment: (input: any) => Promise<void>;
     changeAppointmentStatus: (input: any) => Promise<void>;
+    getCityHospitalList: (city: string) => Promise<void>;
 
 }
 
@@ -31,6 +30,7 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
     list: [],
     doctorList: [],
     hospitalList: [],
+    cityHospitalList: [],
     appointment: null,
     // get Doctor List
     getDoctorList: async () => {
@@ -45,7 +45,7 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
     // get Hospital List
     getHospitalList: async () => {
         try {
-            const response = await clientFetch<{ id: number; name: string }[]>('/api/hospitals')
+            const response = await clientFetch<HospitalListItem[]>('/api/hospitals')
             set({ hospitalList: response })
         } catch (error) {
             toast.error('Unable to fetch hospital list')
@@ -126,6 +126,16 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
             })
         } catch (error) {
             console.log(error)
+        }
+    },
+
+    getCityHospitalList: async (city) => {
+        try {
+            const response = await clientFetch<HospitalListItem[]>(`/api/hospitals?city=${encodeURIComponent(city)}`)
+            set({ cityHospitalList: response })
+        } catch (error) {
+            console.log(error)
+            toast.error('Unable to fetch hospital list for the city')
         }
     },
 

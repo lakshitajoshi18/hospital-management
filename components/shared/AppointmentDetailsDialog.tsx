@@ -6,12 +6,14 @@ import {
   MapPin,
   Phone,
   UserRound,
+  X,
   XCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -36,11 +38,11 @@ const AppointmentDetailsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[90vh] max-h-[95vh] w-[100vw] max-w-[100vw] border-cyan-100 bg-[linear-gradient(180deg,#f9fdff_0%,#f2faff_100%)] p-0">
-        <DialogHeader className="border-b border-cyan-100 px-5 pb-4 pt-5 sm:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      <DialogContent className="h-[90vh] max-h-[95vh] min-w-[min(1200px,calc(100vw-2rem))] rounded-[28px] border border-cyan-100 bg-white/95 shadow-2xl p-0 backdrop-blur-sm">
+        <DialogHeader className="border-b border-cyan-100 bg-cyan-50/70 px-6 py-5 shadow-sm sm:px-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-1">
-              <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 sm:text-2xl">
+              <DialogTitle className="flex flex-wrap items-center gap-2 text-xl font-semibold text-slate-900 sm:text-2xl">
                 <UserRound className="size-5 text-cyan-700" />
                 {appointment?.name ?? "Patient details"}
               </DialogTitle>
@@ -67,69 +69,88 @@ const AppointmentDetailsDialog = ({
                 </Badge>
               )}
             </div>
+
+            <DialogClose className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-200">
+              <X className="size-4" />
+            </DialogClose>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="h-[calc(90vh-80px)] px-5 pb-6 pt-4 sm:px-8">
+        <ScrollArea className="h-[calc(90vh-96px)] overflow-hidden px-6 pb-6 pt-4 sm:px-8">
           {appointment ? (
-            <div className="mx-auto flex max-w-5xl flex-col gap-6">
-              <section className="grid gap-4 rounded-2xl border border-cyan-100 bg-white/90 p-4 sm:grid-cols-2 sm:p-6">
-                <div className="space-y-2">
+            <div className="mx-auto flex max-w-6xl flex-col gap-6">
+              <section className="grid gap-4 rounded-[26px] border border-cyan-100 bg-slate-50/90 p-5 shadow-sm sm:grid-cols-2 sm:p-6">
+                <div className="space-y-3">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                     Patient Information
                   </h3>
-                  <div className="space-y-1 text-sm text-slate-700">
-                    <p>
-                      <span className="font-medium text-slate-900">Name:</span> {appointment.name ?? "-"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-900">Age / Gender:</span> {appointment.age ?? "-"} / {appointment.gender ?? "-"}
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 size-4 text-cyan-700" />
-                      <span className="text-slate-700 whitespace-pre-line">
-                        {appointment.address ?? "No address provided"}
-                      </span>
-                    </p>
+                  <div className="space-y-3 text-sm text-slate-700">
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                      <p className="text-slate-900">
+                        <span className="font-medium">Name:</span> {appointment.name ?? "-"}
+                      </p>
+                      <p className="mt-1 text-slate-600">
+                        <span className="font-medium">Age / Gender:</span> {appointment.age ?? "-"} / {appointment.gender ?? "-"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                      <p className="flex items-start gap-2 text-slate-700">
+                        <MapPin className="mt-0.5 size-4 text-cyan-700" />
+                        <span className="text-slate-700 whitespace-pre-line">
+                          {appointment.address ?? "No address provided"}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                     Appointment Details
                   </h3>
-                  <div className="space-y-1 text-sm text-slate-700">
-                    <p>
-                      <span className="font-medium text-slate-900">Hospital:</span> {appointment.hospital ?? "-"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-900">Doctor:</span> {appointment.doctor ?? "-"}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <CalendarDays className="size-4 text-cyan-700" />
-                      <span className="text-slate-700">{appointment.appointmentDate ?? appointment.date ?? "-"}</span>
-                    </p>
+                  <div className="space-y-3 text-sm text-slate-700">
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                      <p className="text-slate-900">
+                        <span className="font-medium">Hospital:</span> {appointment.hospital ?? "-"}
+                      </p>
+                      <p className="mt-1 text-slate-600">
+                        <span className="font-medium">Doctor:</span> {appointment.doctor ?? "-"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                      <p className="flex items-center gap-2 text-slate-700">
+                        <CalendarDays className="size-4 text-cyan-700" />
+                        <span>{appointment.appointmentDate ?? appointment.date ?? "-"}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-cyan-100 bg-white/90 p-4 sm:p-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Problem / Diagnosis
-                </h3>
-                <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">
+              <section className="rounded-[26px] border border-cyan-100 bg-white/95 p-5 shadow-sm sm:p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                    Problem / Diagnosis
+                  </h3>
+                  <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-700">
+                    {appointment.status === true ? "Resolved" : "Open"}
+                  </span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-slate-700 whitespace-pre-line">
                   {appointment.problem ?? "No problem description provided"}
                 </p>
               </section>
 
               {appointment.medicines && (
-                <section className="rounded-2xl border border-cyan-100 bg-white/90 p-4 sm:p-6">
+                <section className="rounded-[26px] border border-cyan-100 bg-white/95 p-5 shadow-sm sm:p-6">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                     Prescribed Medicines
                   </h3>
-                  <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-cyan-50/80 p-3 text-xs text-slate-800">
+                  <div className="mt-3 rounded-3xl bg-cyan-50/80 p-4 text-sm text-slate-800">
                     {String(appointment.medicines).replace(/^"|"$/g, "")}
-                  </pre>
+                  </div>
                 </section>
               )}
             </div>

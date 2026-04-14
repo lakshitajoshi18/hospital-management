@@ -1,14 +1,14 @@
 import { toast } from "sonner";
 import { create } from "zustand";
 import { clientFetch } from "@/lib/api-client";
-import { HospitalFormData } from "@/types";
+import { HospitalFormData, HospitalListItem } from "@/types";
 
 type RegisterHospitalInput = HospitalFormData;
 type VerifyDoctorInput = { id: number };
 
 interface ADMINSTOREINTERFACE {
     doctorList: any[]
-    hospitalList: any[],
+    hospitalList: HospitalListItem[],
     getDoctorList: () => Promise<void>
     getHospitalList: () => Promise<void>
     registerHospital: (input: RegisterHospitalInput) => Promise<boolean>;
@@ -43,7 +43,7 @@ export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
     // get doctors list
     getDoctorList: async () => {
         try {
-            const response = await clientFetch('/api/doctors?verified=true')
+            const response = await clientFetch('/api/doctors/list')
             set({ doctorList: response })
         } catch (error) {
             console.log(error)
@@ -56,6 +56,7 @@ export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
         try {
             const response = await clientFetch('/api/hospitals')
             set({ hospitalList: response })
+            console.log(response)
         } catch (error) {
             console.log(error)
             toast.error('Unable to fetch hospital list')

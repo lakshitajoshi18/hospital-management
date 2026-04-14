@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/dialog"
 import { HospitalFormData } from "@/types"
 import { Pencil, Trash2 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import UpdateHospitalData from "./UpdateHospitalData"
+import { AdminStore } from "@/store/admin.store"
 
 type HospitalRecord = {
     id: number
@@ -50,97 +51,6 @@ type HospitalRecord = {
     description: string
 }
 
-const dummyHospitals: HospitalRecord[] = [
-    {
-        id: 1,
-        name: "City General Hospital",
-        registrationNumber: "CGH-2020-101",
-        type: "Government",
-        address: "12 Main Road, Sector 15",
-        city: "Jaipur",
-        state: "Rajasthan",
-        pincode: "302001",
-        phone: "+91 9876543210",
-        email: "citygeneral@hospital.com",
-        website: "www.citygeneral.in",
-        numberOfBeds: 320,
-        icuBeds: 48,
-        oxygenCylinders: 180,
-        ventilators: 36,
-        ambulances: 10,
-        hasXray: true,
-        hasMRI: true,
-        hasUltrasound: true,
-        hasCTScan: true,
-        hasPathologyLab: true,
-        hasBloodBank: true,
-        hasPharmacy: true,
-        departments: ["OPD (Outpatient)", "Emergency / Trauma", "Cardiology", "Neurology"],
-        operatingHours: "24 x 7",
-        emergencyAvailable: true,
-        description:
-            "Multi-specialty government hospital serving emergency and critical care patients.",
-    },
-    {
-        id: 2,
-        name: "Apollo Medical Center",
-        registrationNumber: "AMC-2018-884",
-        type: "Private",
-        address: "45 Ring Road, Civil Lines",
-        city: "Lucknow",
-        state: "Uttar Pradesh",
-        pincode: "226001",
-        phone: "+91 9811122233",
-        email: "support@apollomedical.com",
-        website: "www.apollomedical.com",
-        numberOfBeds: 210,
-        icuBeds: 32,
-        oxygenCylinders: 120,
-        ventilators: 28,
-        ambulances: 6,
-        hasXray: true,
-        hasMRI: true,
-        hasUltrasound: true,
-        hasCTScan: true,
-        hasPathologyLab: true,
-        hasBloodBank: false,
-        hasPharmacy: true,
-        departments: ["Orthopedics", "Gynecology & Obstetrics", "Pediatrics", "Radiology"],
-        operatingHours: "8AM - 10PM",
-        emergencyAvailable: true,
-        description: "Private tertiary-care center with advanced diagnostics and elective surgery units.",
-    },
-    {
-        id: 3,
-        name: "Sunrise Health Clinic",
-        registrationNumber: "SHC-2022-457",
-        type: "Clinic",
-        address: "9 Green Park, MG Road",
-        city: "Indore",
-        state: "Madhya Pradesh",
-        pincode: "452001",
-        phone: "+91 9800012345",
-        email: "hello@sunriseclinic.in",
-        website: "www.sunriseclinic.in",
-        numberOfBeds: 60,
-        icuBeds: 8,
-        oxygenCylinders: 36,
-        ventilators: 6,
-        ambulances: 2,
-        hasXray: true,
-        hasMRI: false,
-        hasUltrasound: true,
-        hasCTScan: false,
-        hasPathologyLab: true,
-        hasBloodBank: false,
-        hasPharmacy: true,
-        departments: ["General Surgery", "ENT", "Dermatology", "Dental"],
-        operatingHours: "9AM - 9PM",
-        emergencyAvailable: false,
-        description: "Community-focused clinic for OPD, minor procedures, and preventive care services.",
-    },
-]
-
 const emptyFormData: HospitalFormData = {
     name: "",
     registrationNumber: "",
@@ -171,14 +81,19 @@ const emptyFormData: HospitalFormData = {
 }
 
 const ListofHospital = () => {
-    const [hospitals, setHospitals] = useState<HospitalRecord[]>(dummyHospitals)
+    const {getHospitalList, hospitalList} = AdminStore();
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [selectedHospitalId, setSelectedHospitalId] = useState<number | null>(null)
     const [formData, setFormData] = useState<HospitalFormData>(emptyFormData)
 
+    useEffect(() => {
+        if (hospitalList.length === 0) {
+            getHospitalList();
+        }
+    }, [hospitalList, getHospitalList])
     const selectedHospital = useMemo(
-        () => hospitals.find((hospital) => hospital.id === selectedHospitalId) ?? null,
-        [hospitals, selectedHospitalId]
+        () => hospitalList.find((hospital) => hospital.id === selectedHospitalId) ?? null,
+        [hospitalList, selectedHospitalId]
     )
 
     const mapToFormData = (hospital: HospitalRecord): HospitalFormData => ({
@@ -259,43 +174,43 @@ const ListofHospital = () => {
         }))
     }
 
-    const handleSave = () => {
-        if (!selectedHospitalId) {
-            return
-        }
+    // const handleSave = () => {
+    //     if (!selectedHospitalId) {
+    //         return
+    //     }
 
-        setHospitals((prev) =>
-            prev.map((hospital) =>
-                hospital.id === selectedHospitalId
-                    ? mapToHospital(selectedHospitalId, formData)
-                    : hospital
-            )
-        )
+    //     setHospitals((prev) =>
+    //         prev.map((hospital) =>
+    //             hospital.id === selectedHospitalId
+    //                 ? mapToHospital(selectedHospitalId, formData)
+    //                 : hospital
+    //         )
+    //     )
 
-        setEditDialogOpen(false)
-        setSelectedHospitalId(null)
-        setFormData(emptyFormData)
-    }
+    //     setEditDialogOpen(false)
+    //     setSelectedHospitalId(null)
+    //     setFormData(emptyFormData)
+    // }
 
-    const handleDelete = (hospitalId: number) => {
-        setHospitals((prev) => prev.filter((hospital) => hospital.id !== hospitalId))
-        if (selectedHospitalId === hospitalId) {
-            setEditDialogOpen(false)
-            setSelectedHospitalId(null)
-            setFormData(emptyFormData)
-        }
-    }
+    // const handleDelete = (hospitalId: number) => {
+    //     setHospitals((prev) => prev.filter((hospital) => hospital.id !== hospitalId))
+    //     if (selectedHospitalId === hospitalId) {
+    //         setEditDialogOpen(false)
+    //         setSelectedHospitalId(null)
+    //         setFormData(emptyFormData)
+    //     }
+    // }
 
-    return (
+    return hospitalList && (
         <section className="space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-green-800">List of Hospitals</h2>
                 <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                    {hospitals.length} Hospitals
+                    {hospitalList.length} Hospitals
                 </Badge>
             </div>
 
-            {hospitals.length === 0 ? (
+            {hospitalList.length === 0 ? (
                 <Card className="border border-dashed border-green-300">
                     <CardContent className="py-8 text-center text-muted-foreground">
                         No hospitals available.
@@ -303,7 +218,7 @@ const ListofHospital = () => {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    {hospitals.map((hospital) => (
+                    {hospitalList.map((hospital) => (
                         <Card key={hospital.id} className="border border-green-100">
                             <CardHeader>
                                 <CardTitle className="text-green-800">{hospital.name}</CardTitle>
@@ -362,7 +277,7 @@ const ListofHospital = () => {
                                 <div>
                                     <p className="text-sm font-medium text-green-700 mb-1">Departments</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {hospital.departments.map((department) => (
+                                        {hospital.departments.map((department: string) => (
                                             <Badge
                                                 key={`${hospital.id}-${department}`}
                                                 variant="outline"
@@ -397,7 +312,7 @@ const ListofHospital = () => {
                                                 formData={formData}
                                                 onFieldChange={handleFieldChange}
                                                 onToggleDepartment={handleToggleDepartment}
-                                                onSave={handleSave}
+                                                onSave={() => {}}
                                             />
                                         ) : null}
                                     </DialogContent>
@@ -406,7 +321,7 @@ const ListofHospital = () => {
                                 <Button
                                     variant="destructive"
                                     size="sm"
-                                    onClick={() => handleDelete(hospital.id)}
+                                    // onClick={() => handleDelete(hospital.id)}
                                 >
                                     <Trash2 className="size-3.5" />
                                     Delete
