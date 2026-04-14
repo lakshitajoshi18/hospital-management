@@ -29,8 +29,8 @@ const LoginPage = () => {
         // Add your login logic here
         try {
             setisLoading(true)
-            await login({ phone, password }).then(() => {
-                router.push("/dashboard");
+            await login({ phone, password }).then((res) => {
+                res && router.push("/dashboard") ;
             });
 
         } catch (error) {

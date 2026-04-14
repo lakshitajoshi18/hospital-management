@@ -1,0 +1,15 @@
+name: Keep Neon DB Warm
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping-db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call DB healthcheck endpoint
+        run: |
+          curl -sS "${{ secrets.APP_BASE_URL }}/api/health" || echo "Ping failed"

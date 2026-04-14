@@ -44,8 +44,8 @@ interface DOCTORSTOREINTERFACE {
     selectedPatient: APPOINTMENTS | null;
     weeklyAppointmentsData: WeeklyAppointments[];
     // functions
-    signup: (input: DoctorSignupInput) => Promise<void>;
-    login: (input: DoctorLoginInput) => Promise<void>;
+    signup: (input: DoctorSignupInput) => Promise<boolean>;
+    login: (input: DoctorLoginInput) => Promise<boolean>;
     checkAuth: () => void;
     logout: () => void;
     getAppointmentList: () => Promise<void>;
@@ -85,7 +85,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         try {
             if (!(input.name && input.hospital && input.experience && input.specialization && input.qualification && input.phone && input.password)) {
                 toast.error('Please fill all the fields');
-                return;
+                return false;
             }
 
             const response = await clientFetch('/api/doctors/signup', {
@@ -102,10 +102,13 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                 const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').includes(input.phone);
                 set({ user: response.user, isAdmin: isAdminId });
                 toast.success('Doctor Registered Successfully');
+                return true
             }
+            return false
         } catch (error) {
             toast.error('Something went wrong');
             console.log(error)
+            return false
         }
     },
     // login controller
@@ -113,7 +116,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         try {
             if (!(input.phone && input.password)) {
                 toast.warning('Please fill all the fields')
-                return;
+                return false;
             }
 
             const response = await clientFetch('/api/doctors/login', {
@@ -132,11 +135,14 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
                     user: response.user,
                     isAdmin: isAdminId,
                 });
+                return true
             }
+            return false
         }
         catch (error) {
             toast.error('Something went wrong');
             console.log(error)
+            return false
         }
     },
     // check-authcontroller

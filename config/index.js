@@ -8,15 +8,10 @@ const parseDatabaseUrl = (value) => {
   return trimmed.replace(/^"(.*)"$/, '$1');
 };
 
-const rawDatabaseUrl =
-  parseDatabaseUrl(process.env.DATABASE_URL) ||
-  parseDatabaseUrl(process.env.NEON_DATABASE_URL) ||
-  parseDatabaseUrl(process.env.NEXT_PUBLIC_DATABASE_URL_CONFIG);
+const rawDatabaseUrl = parseDatabaseUrl(process.env.NEXT_PUBLIC_DATABASE_URL_CONFIG) || parseDatabaseUrl(process.env.NEON_DATABASE_URL);
 
 if (!rawDatabaseUrl) {
-  throw new Error(
-    'DATABASE_URL, NEON_DATABASE_URL, or NEXT_PUBLIC_DATABASE_URL_CONFIG is required to connect to the database.'
-  );
+  throw new Error('DATABASE_URL or NEON_DATABASE_URL is required to connect to the database.');
 }
 
 try {

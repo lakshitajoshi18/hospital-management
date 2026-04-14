@@ -155,9 +155,8 @@ const SignupPage = () => {
             qualification: form.qualification,
             phone: form.phone,
             password: form.password,
-        }).then(() => {
-            setisLoading(false)
-            router.push("/dashboard")
+        }).then((res) => {
+            res && router.push("/dashboard")
         })
     }
 
