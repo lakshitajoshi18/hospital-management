@@ -15,7 +15,7 @@ import {
     DialogContent,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { HospitalFormData } from "@/types"
+import { HospitalFormData, HospitalListItem } from "@/types"
 import { Pencil, Trash2 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import UpdateHospitalData from "./UpdateHospitalData"
@@ -96,7 +96,7 @@ const ListofHospital = () => {
         [hospitalList, selectedHospitalId]
     )
 
-    const mapToFormData = (hospital: HospitalRecord): HospitalFormData => ({
+    const mapToFormData = (hospital: HospitalListItem): HospitalFormData => ({
         name: hospital.name,
         registrationNumber: hospital.registrationNumber,
         type: hospital.type,
@@ -155,7 +155,7 @@ const ListofHospital = () => {
         description: values.description,
     })
 
-    const handleOpenEdit = (hospital: HospitalRecord) => {
+    const handleOpenEdit = (hospital: HospitalListItem) => {
         setSelectedHospitalId(hospital.id)
         setFormData(mapToFormData(hospital))
         setEditDialogOpen(true)
