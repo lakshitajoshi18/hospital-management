@@ -1,3 +1,4 @@
+'use client'
 import { ArrowRight, Building2, Clock3, ShieldCheck, Stethoscope } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,89 +11,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-
-type Doctor = {
-    id: number;
-    name: string;
-    hospital: string;
-    specialization: string;
-    experience: number;
-};
-
-const doctors: Doctor[] = [
-    {
-        id: 1,
-        name: "Dr. Aarya Sharma",
-        hospital: "CityCare Multispeciality Hospital",
-        specialization: "Cardiology",
-        experience: 14,
-    },
-    {
-        id: 2,
-        name: "Dr. Kabir Mehta",
-        hospital: "Sunrise Medical Centre",
-        specialization: "Orthopedics",
-        experience: 11,
-    },
-    {
-        id: 3,
-        name: "Dr. Rhea Nair",
-        hospital: "Metro Heart Institute",
-        specialization: "Neurology",
-        experience: 9,
-    },
-    {
-        id: 4,
-        name: "Dr. Vihaan Arora",
-        hospital: "Green Valley Hospital",
-        specialization: "Pediatrics",
-        experience: 8,
-    },
-    {
-        id: 5,
-        name: "Dr. Myra Kapoor",
-        hospital: "Trinity Women & Child Care",
-        specialization: "Gynecology",
-        experience: 12,
-    },
-    {
-        id: 6,
-        name: "Dr. Ishan Verma",
-        hospital: "Northline Trauma & Emergency",
-        specialization: "Emergency Medicine",
-        experience: 10,
-    },
-    {
-        id: 7,
-        name: "Dr. Neha Chawla",
-        hospital: "Bluebridge Super Speciality",
-        specialization: "Dermatology",
-        experience: 7,
-    },
-    {
-        id: 8,
-        name: "Dr. Arjun Rao",
-        hospital: "Lakeside Diagnostics & Care",
-        specialization: "Radiology",
-        experience: 13,
-    },
-    {
-        id: 9,
-        name: "Dr. Saanvi Iyer",
-        hospital: "NobleCare Cancer Institute",
-        specialization: "Oncology",
-        experience: 15,
-    },
-    {
-        id: 10,
-        name: "Dr. Dev Malhotra",
-        hospital: "Prime Surgical Centre",
-        specialization: "General Surgery",
-        experience: 9,
-    },
-];
+import { usePatientStore } from "@/store/patient.store";
+import { useEffect } from "react";
 
 const ListOfDoctors = () => {
+    const {doctorList, getDoctorList} = usePatientStore();
+    useEffect(() => {
+        doctorList.length === 0 && getDoctorList();
+    }, [])
     return (
         <section
             id="doctors"
@@ -123,7 +49,7 @@ const ListOfDoctors = () => {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    {doctors.map((doctor) => (
+                    {doctorList.map((doctor) => (
                         <Card
                             key={doctor.id}
                             className="rounded-[24px] border border-cyan-100/70 bg-white/75 py-0 shadow-[0_20px_70px_rgba(14,116,144,0.10)] backdrop-blur transition-transform duration-300 hover:-translate-y-1"
@@ -132,7 +58,7 @@ const ListOfDoctors = () => {
                                 <div className="mb-2 flex items-center justify-between gap-3">
                                     <Badge className="bg-cyan-700 text-white">{doctor.specialization}</Badge>
                                     <Badge variant="outline" className="border-slate-200 text-slate-700">
-                                        ID #{doctor.id.toString().padStart(2, "0")}
+                                        ID #{doctor.id}
                                     </Badge>
                                 </div>
                                 <CardTitle className="text-xl font-semibold text-slate-900">{doctor.name}</CardTitle>
@@ -144,7 +70,7 @@ const ListOfDoctors = () => {
                                     <Building2 className="mt-0.5 size-4.5 text-cyan-700" />
                                     <div>
                                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Hospital</p>
-                                        <p className="mt-1 text-sm font-medium leading-6 text-slate-800">{doctor.hospital}</p>
+                                        <p className="mt-1 text-sm font-medium leading-6 text-slate-800">{doctor.hospital?.name}</p>
                                     </div>
                                 </div>
 

@@ -26,6 +26,15 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { usePatientStore } from "@/store/patient.store";
@@ -171,11 +180,45 @@ const normalizeCity = (value: string) => value.trim().toLowerCase();
 const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
     const {cityHospitalList, getCityHospitalList} = usePatientStore();
     const [cityInput, setCityInput] = useState("");
+    const [addressInput, setAddressInput] = useState<string | null>(null);
+    const [addressFilter, setAddressFilter] = useState("");
+    const [filterOpen, setFilterOpen] = useState(false);
+
+    const addressOptions = useMemo(
+        () => [...new Set(cityHospitalList.map((hospital) => hospital.address))],
+        [cityHospitalList]
+    );
+
+    const filteredHospitals = useMemo(() => {
+        if (!addressFilter.trim()) {
+            return cityHospitalList;
+        }
+
+        const filterValue = addressFilter.trim().toLowerCase();
+        return cityHospitalList.filter((hospital) =>
+            hospital.address.toLowerCase().includes(filterValue) ||
+            hospital.city.toLowerCase().includes(filterValue)
+        );
+    }, [addressFilter, cityHospitalList]);
 
     const searchHospitals = async () => {
         if (cityInput.trim()) {
             await getCityHospitalList(cityInput.trim());
         }
+    };
+
+    const applyAddressFilter = () => {
+        if (!addressInput) {
+            return;
+        }
+
+        setAddressFilter(addressInput.trim());
+        setFilterOpen(false);
+    };
+
+    const clearAddressFilter = () => {
+        setAddressInput(null);
+        setAddressFilter("");
     };
     return (
         <Dialog>
@@ -210,42 +253,126 @@ const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
                         facilities.
                     </DialogDescription>
 
-                    <form
-                        className="mt-3 flex flex-col gap-3 sm:flex-row"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            searchHospitals();
-                        }}
-                    >
-                        <Input
-                            value={cityInput}
-                            onChange={(event) => setCityInput(event.target.value)}
-                            placeholder="Enter city e.g. pithoragarh"
-                            className="h-11 rounded-xl border-cyan-200 bg-white"
-                        />
-                        <button
-                            type="submit"
-                            className={cn(
-                                buttonVariants({ size: "lg" }),
-                                "h-11 rounded-xl bg-cyan-700 px-4 text-white hover:bg-cyan-800"
-                            )}
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <form
+                            className="flex-1 flex flex-col gap-3 sm:flex-row"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                searchHospitals();
+                            }}
                         >
-                            <Search className="size-4.5" />
-                            Search Hospitals
-                        </button>
-                    </form>
+                            <Input
+                                value={cityInput}
+                                onChange={(event) => setCityInput(event.target.value)}
+                                placeholder="Enter city e.g. pithoragarh"
+                                className="h-11 rounded-xl border-cyan-200 bg-white"
+                            />
+                            <button
+                                type="submit"
+                                className={cn(
+                                    buttonVariants({ size: "lg" }),
+                                    "h-11 rounded-xl bg-cyan-700 px-4 text-white hover:bg-cyan-800"
+                                )}
+                            >
+                                <Search className="size-4.5" />
+                                Search Hospitals
+                            </button>
+                        </form>
+
+                        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                            <PopoverTrigger
+                                className={cn(
+                                    buttonVariants({ variant: "outline", size: "sm" }),
+                                    "flex h-11 items-center gap-2 rounded-full border-cyan-200 bg-white px-4 text-sm text-cyan-700 shadow-sm hover:bg-cyan-50"
+                                )}
+                            >
+                                <MapPin className="size-4" />
+                                Address Filter
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[min(28rem,100%)] border-cyan-100 bg-white p-4 shadow-lg" align="end">
+                                <div className="space-y-3">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">Filter results by address</p>
+                                        <p className="text-xs text-slate-500">Enter a street, landmark, or city area.</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-900 text-sm">Choose Address</Label>
+                                        <Select value={addressInput} onValueChange={setAddressInput}>
+                                            <SelectTrigger className="h-11 rounded-xl border-cyan-200 bg-slate-50 px-3 text-left text-sm text-slate-700 w-full">
+                                                <SelectValue placeholder={addressOptions.length > 0 ? "Select address" : "Search city first"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {addressOptions.length > 0 ? (
+                                                    addressOptions.map((address) => (
+                                                        <SelectItem key={address} value={address}>
+                                                            {address}
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <SelectItem value="" disabled>
+                                                        No addresses available
+                                                    </SelectItem>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                                        <button
+                                            type="button"
+                                            onClick={clearAddressFilter}
+                                            className={cn(
+                                                buttonVariants({ variant: "outline", size: "sm" }),
+                                                "h-11 rounded-xl border-cyan-200 bg-white text-cyan-700 hover:bg-cyan-50"
+                                            )}
+                                        >
+                                            Clear Filter
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={applyAddressFilter}
+                                            className={cn(
+                                                buttonVariants({ size: "sm" }),
+                                                "h-11 rounded-xl bg-cyan-700 text-white hover:bg-cyan-800"
+                                            )}
+                                        >
+                                            Apply Filter
+                                        </button>
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </DialogHeader>
 
                 <div className="px-5 py-4 sm:px-6">
-                    <p className="mb-3 text-sm text-slate-600">
-                        Showing results for <span className="font-semibold text-slate-900">{cityInput || "city"}</span>
-                        : <span className="font-semibold text-cyan-800">{}</span> hospitals found.
-                    </p>
+<div className="mb-3 space-y-3">
+                            <p className="text-sm text-slate-600">
+                                Showing results for <span className="font-semibold text-slate-900">{cityInput || "city"}</span>:
+                                <span className="font-semibold text-cyan-800"> {filteredHospitals.length}</span> hospitals found.
+                            </p>
+                            {addressFilter && (
+                                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-sm text-slate-700">
+                                    <MapPin className="size-4 text-cyan-700" />
+                                    <span>
+                                        <span className="font-semibold text-slate-900">Address filter:</span> {addressFilter}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={clearAddressFilter}
+                                        className="rounded-full px-3 py-1 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                            )}
+                        </div>
 
                     <ScrollArea className="h-[56vh] pr-3">
                         <div className="space-y-4 pb-2">
-                            {cityHospitalList.length > 0 ? (
-                                cityHospitalList.map((hospital) => {
+                            {filteredHospitals.length > 0 ? (
+                                filteredHospitals.map((hospital) => {
                                     const bookingParams = new URLSearchParams({
                                         hospitalId: String(hospital.id),
                                         city: hospital.city,
