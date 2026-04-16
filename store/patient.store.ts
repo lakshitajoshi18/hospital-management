@@ -35,7 +35,7 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
     // get Doctor List
     getDoctorList: async () => {
         try {
-            const response = await clientFetch<DOCTORTYPE[]>('/api/doctors/list')
+            const response = await clientFetch<DOCTORTYPE[]>('/api/doctors/list?verified=true')
             set({ doctorList: response })
         } catch (error) {
             console.error(error)

@@ -15,6 +15,18 @@ export async function clientFetch<T = any>(
   if (!response.ok) {
     const text = await response.text()
 
+    let message = text || `${response.status} ${response.statusText}`
+    try {
+      const json = JSON.parse(text)
+      if (json?.error) {
+        message = String(json.error)
+      } else if (typeof json === 'string') {
+        message = json
+      }
+    } catch {
+      // Ignore invalid JSON and use raw text
+    }
+
     // If the database is just waking up (Neon cold start), we may see
     // transient 5xx / "Failed query" errors. Retry once in that case.
     const isServerError = response.status >= 500
@@ -25,7 +37,7 @@ export async function clientFetch<T = any>(
       return clientFetch<T>(url, options, attempt + 1)
     }
 
-    throw new Error(text || `${response.status} ${response.statusText}`)
+    throw new Error(message)
   }
 
   return (await response.json()) as T

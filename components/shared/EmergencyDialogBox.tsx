@@ -38,6 +38,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { usePatientStore } from "@/store/patient.store";
+import BookAppointmentDialogBox from "../home/BookAppointmentDialogBox";
 
 type EmergencyDialogBoxProps = {
     triggerClassName?: string;
@@ -475,16 +476,7 @@ const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
                                                 >
                                                     Call Hospital
                                                 </Link>
-                                                <Link
-                                                    href={`/login?${bookingParams}`}
-                                                    className={cn(
-                                                        buttonVariants({ size: "sm" }),
-                                                        "rounded-full bg-slate-900 text-white hover:bg-cyan-800"
-                                                    )}
-                                                >
-                                                    Direct Appointment Booking
-                                                    <ArrowUpRight className="size-4" />
-                                                </Link>
+                                               <BookAppointmentDialogBox city={cityInput} hospitalId={hospital.id}/>
                                             </CardFooter>
                                         </Card>
                                     );

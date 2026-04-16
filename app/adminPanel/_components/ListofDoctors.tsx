@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AdminStore } from "@/store/admin.store";
+import { verify } from "crypto";
 import { CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -31,17 +32,19 @@ type DoctorRecord = {
   patientsAppointed: number;
 };
 
-const hospitalLookup: Record<number, string> = {
-  1: "City General Hospital",
-  2: "Apollo Medical Center",
-  3: "Sunrise Health Clinic",
-};
-
 const ListofDoctors = () => {
-  const { doctorList, getDoctorList } = AdminStore();
+  const { doctorList, getDoctorList, verifyDoctors } = AdminStore();
   useEffect(() => {
     doctorList.length === 0 && getDoctorList();
   }, [doctorList]);
+
+  const verifyDoctor = async (id: number) => {
+    try {
+      await verifyDoctors(id);
+    } catch (error) {
+      
+    }
+  };
 
   return doctorList && (
     <section className="space-y-4 mt-8">
@@ -87,8 +90,8 @@ const ListofDoctors = () => {
                     <span className="font-medium text-green-700">
                       Hospital:
                     </span>{" "}
-                    {hospitalLookup[doctor.hospital.id] ??
-                      `Hospital #${doctor.hospital.id}`}
+                    {doctor.hospital?.name ??
+                      `Hospital #${doctor.hospital?.id}`}
                   </p>
                   <p>
                     <span className="font-medium text-green-700">City:</span>{" "}
@@ -120,7 +123,7 @@ const ListofDoctors = () => {
                   <Button
                     size="sm"
                     className="bg-green-600 text-white hover:bg-green-700"
-                    // onClick={() => verifyDoctor(doctor.id)}
+                    onClick={() => verifyDoctor(Number(doctor.id))}
                   >
                     <CheckCircle2 className="size-4" />
                     Verify Doctor

@@ -57,10 +57,11 @@ export async function GET(
 
   if(action === 'list') {
     try {
+      const isVerified = url.searchParams.get('verified');
       const response = await db.select(doctorSelect)
       .from(Doctors)
       .leftJoin(Hospitals, eq(Doctors.hospital, Hospitals.id))
-      .where(eq(Doctors.isVerified, true))
+      .where(isVerified === 'true' ? eq(Doctors.isVerified, true) : undefined)
       return NextResponse.json(response)
     } catch (error) {
       return NextResponse.json(
@@ -272,7 +273,12 @@ export async function POST(
     if (existingUser.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-
+    
+    // if doctor is not verified, return error
+    if(existingUser[0].isVerified === false) {
+      return NextResponse.json({ error: 'Your account is pending verification by admin. Please wait for approval.' }, { status: 403 })
+    }
+    // compare password
     const isMatch = await bcrypt.compare(body.password, existingUser[0].password || '')
     if (!isMatch) {
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })

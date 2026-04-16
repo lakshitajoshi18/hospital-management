@@ -36,6 +36,8 @@ const AppointmentDetailsDialog = ({
 }: AppointmentDetailsDialogProps) => {
   const status = appointment?.status ?? false;
 
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="h-[90vh] max-h-[95vh] min-w-[min(1200px,calc(100vw-2rem))] rounded-[28px] border border-cyan-100 bg-white/95 shadow-2xl p-0 backdrop-blur-sm">
@@ -149,7 +151,15 @@ const AppointmentDetailsDialog = ({
                     Prescribed Medicines
                   </h3>
                   <div className="mt-3 rounded-3xl bg-cyan-50/80 p-4 text-sm text-slate-800">
-                    {String(appointment.medicines).replace(/^"|"$/g, "")}
+                    {String(appointment.medicines)
+                      .replace(/\\n/g, "\n")
+                      .split(/\r?\n/)
+                      .filter((line) => line.trim().length > 0)
+                      .map((line: string, index: number) => (
+                        <p key={index} className="mb-2 last:mb-0">
+                          {line}
+                        </p>
+                      ))}
                   </div>
                 </section>
               )}

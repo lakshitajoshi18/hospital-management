@@ -132,7 +132,7 @@ const SignupPage = () => {
 
     const strength = useMemo(() => getPasswordStrength(form.password), [form.password])
     const selectedHospitalName = useMemo(
-        () => hospitalOptions.find((hospital) => String(hospital.id) === form.hospital)?.name,
+        () => hospitalOptions.find((hospital) => String(hospital.name) === form.hospital)?.name,
         [hospitalOptions, form.hospital]
     )
     const passwordsMatch =

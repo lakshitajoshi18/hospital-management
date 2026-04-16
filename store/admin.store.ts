@@ -1,18 +1,17 @@
 import { toast } from "sonner";
 import { create } from "zustand";
 import { clientFetch } from "@/lib/api-client";
-import { HospitalFormData, HospitalListItem } from "@/types";
+import { DOCTORTYPE, HospitalFormData, HospitalListItem } from "@/types";
 
 type RegisterHospitalInput = HospitalFormData;
-type VerifyDoctorInput = { id: number };
 
 interface ADMINSTOREINTERFACE {
-    doctorList: any[]
+    doctorList: DOCTORTYPE[]
     hospitalList: HospitalListItem[],
     getDoctorList: () => Promise<void>
     getHospitalList: () => Promise<void>
     registerHospital: (input: RegisterHospitalInput) => Promise<boolean>;
-    verifyDoctors: (input: VerifyDoctorInput) => Promise<void>;
+    verifyDoctors: (id: number) => Promise<void>;
 }
 
 export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
@@ -64,11 +63,14 @@ export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
     },
 
     // verify doctors
-    verifyDoctors: async (input) => {
+    verifyDoctors: async (id: number) => {
         try {
-            await clientFetch('/api/doctors/verify', {
+            await clientFetch(`/api/doctors/verify`, {
                 method: 'PATCH',
-                body: JSON.stringify(input),
+                body: JSON.stringify({ id }),
+            }).then(() => {
+                toast.success('Doctor verified successfully')
+                get().getDoctorList()
             })
         } catch (error) {
             console.log(error)
