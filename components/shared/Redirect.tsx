@@ -20,6 +20,8 @@ const Redirect = ({ children }: { children: React.ReactNode }) => {
     );
   if (path.includes("/login") && user) return redirect("/");
   if (path.includes("/signup") && user) return redirect("/");
+
+  if(path.includes("/dashboard") && !user) return redirect("/login");
   return children;
 };
 
