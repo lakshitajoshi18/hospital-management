@@ -19,6 +19,8 @@ type UpdateHospitalDataProps = {
     onSave: () => void
 }
 
+const safeString = (value: string | null | undefined) => value ?? ""
+
 const UpdateHospitalData = ({
     formData,
     onFieldChange,
@@ -50,7 +52,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="hospital-name"
-                                    value={formData.name}
+                                    value={safeString(formData.name)}
                                     onChange={(e) => onFieldChange("name", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -61,7 +63,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="reg-number"
-                                    value={formData.registrationNumber}
+                                    value={safeString(formData.registrationNumber)}
                                     onChange={(e) => onFieldChange("registrationNumber", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -72,7 +74,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="hospital-type"
-                                    value={formData.type}
+                                    value={safeString(formData.type)}
                                     onChange={(e) => onFieldChange("type", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -83,7 +85,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="operating-hours"
-                                    value={formData.operatingHours}
+                                    value={safeString(formData.operatingHours)}
                                     onChange={(e) => onFieldChange("operatingHours", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -103,7 +105,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Textarea
                                     id="address"
-                                    value={formData.address}
+                                    value={safeString(formData.address)}
                                     onChange={(e) => onFieldChange("address", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30 min-h-15"
                                 />
@@ -114,7 +116,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="city"
-                                    value={formData.city}
+                                    value={safeString(formData.city)}
                                     onChange={(e) => onFieldChange("city", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -125,7 +127,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="state"
-                                    value={formData.state}
+                                    value={safeString(formData.state)}
                                     onChange={(e) => onFieldChange("state", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -136,7 +138,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="pincode"
-                                    value={formData.pincode}
+                                    value={safeString(formData.pincode)}
                                     onChange={(e) => onFieldChange("pincode", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -147,7 +149,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="phone"
-                                    value={formData.phone}
+                                    value={safeString(formData.phone)}
                                     onChange={(e) => onFieldChange("phone", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -158,7 +160,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="email"
-                                    value={formData.email}
+                                    value={safeString(formData.email)}
                                     onChange={(e) => onFieldChange("email", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -169,7 +171,7 @@ const UpdateHospitalData = ({
                                 </Label>
                                 <Input
                                     id="website"
-                                    value={formData.website}
+                                    value={safeString(formData.website)}
                                     onChange={(e) => onFieldChange("website", e.target.value)}
                                     className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30"
                                 />
@@ -195,7 +197,7 @@ const UpdateHospitalData = ({
                                     <Input
                                         type="number"
                                         min={0}
-                                        value={formData[key as keyof HospitalFormData] as string}
+                                        value={safeString(formData[key as keyof HospitalFormData] as string)}
                                         onChange={(e) =>
                                             onFieldChange(
                                                 key as keyof HospitalFormData,
@@ -280,7 +282,7 @@ const UpdateHospitalData = ({
                         <Separator className="bg-green-200 mb-4" />
                         <Textarea
                             placeholder="Hospital description"
-                            value={formData.description}
+                            value={safeString(formData.description)}
                             onChange={(e) => onFieldChange("description", e.target.value)}
                             className="border-green-300 focus-visible:border-green-500 focus-visible:ring-green-500/30 min-h-24"
                         />

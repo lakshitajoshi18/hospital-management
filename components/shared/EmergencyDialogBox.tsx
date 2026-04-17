@@ -353,25 +353,10 @@ const EmergencyDialogBox = ({ triggerClassName }: EmergencyDialogBoxProps) => {
                                 Showing results for <span className="font-semibold text-slate-900">{cityInput || "city"}</span>:
                                 <span className="font-semibold text-cyan-800"> {filteredHospitals.length}</span> hospitals found.
                             </p>
-                            {addressFilter && (
-                                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-sm text-slate-700">
-                                    <MapPin className="size-4 text-cyan-700" />
-                                    <span>
-                                        <span className="font-semibold text-slate-900">Address filter:</span> {addressFilter}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={clearAddressFilter}
-                                        className="rounded-full px-3 py-1 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
-                                    >
-                                        Reset
-                                    </button>
-                                </div>
-                            )}
                         </div>
 
                     <ScrollArea className="h-[56vh] pr-3">
-                        <div className="space-y-4 pb-2">
+                        <div className="space-y-4 pb-10">
                             {filteredHospitals.length > 0 ? (
                                 filteredHospitals.map((hospital) => {
                                     const bookingParams = new URLSearchParams({

@@ -1,4 +1,4 @@
-import { DOCTORTYPE, HospitalListItem } from "@/types";
+import { APPOINTMENTS, DOCTORTYPE, HospitalListItem } from "@/types";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { clientFetch } from "@/lib/api-client";
@@ -6,8 +6,7 @@ import { clientFetch } from "@/lib/api-client";
 
 interface PATIENTSTORENTERFACE {
     // variables
-    list: any[],
-    appointment: any,
+    list: APPOINTMENTS[],
     doctorList: DOCTORTYPE[]
     hospitalList: HospitalListItem[],
     cityHospitalList: HospitalListItem[],
@@ -19,8 +18,7 @@ interface PATIENTSTORENTERFACE {
     bookAppointment: (input: any) => Promise<void>;
     cancelAppointment: (input: any) => Promise<void>;
     getAppointmentList: (input: any) => Promise<void>;
-    getSingleAppointment: (input: any) => Promise<void>;
-    changeAppointmentStatus: (input: any) => Promise<void>;
+    changeAppointmentData: (input: any) => Promise<void>;
     getCityHospitalList: (city: string) => Promise<void>;
 
 }
@@ -31,7 +29,6 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
     doctorList: [],
     hospitalList: [],
     cityHospitalList: [],
-    appointment: null,
     // get Doctor List
     getDoctorList: async () => {
         try {
@@ -87,7 +84,7 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
                 method: 'DELETE',
                 body: JSON.stringify({ id: input.id }),
             })
-            alert('Appointment Cancelled Successfully');
+            toast.success('Appointment Cancelled Successfully');
         } catch (error) {
             console.log(error)
             toast.error('Unable to cancel appointment')
@@ -105,22 +102,10 @@ export const usePatientStore = create<PATIENTSTORENTERFACE>((set, get) => ({
         }
     },
 
-    // get single appointment
-    getSingleAppointment: async (input) => {
+    // change appointment data
+    changeAppointmentData: async (input) => {
         try {
-            const response = await clientFetch<any[]>(`/api/patients/single?id=${encodeURIComponent(input.id)}`)
-            if (response.length > 0) {
-                set({ appointment: response[0] })
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    },
-
-    // change appointment status
-    changeAppointmentStatus: async (input) => {
-        try {
-            await clientFetch('/api/patients/status', {
+            await clientFetch('/api/patients/update', {
                 method: 'PATCH',
                 body: JSON.stringify(input),
             })

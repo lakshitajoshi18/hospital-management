@@ -176,30 +176,22 @@ const PatientForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="patient-city" className="text-cyan-900">
+                  <Label htmlFor="patient-problem" className="text-cyan-900">
                     City
                   </Label>
-                  <Select
-                  defaultValue={city}
+                  <Input
+                    id="patient-city"
                     value={form.city}
-                    onValueChange={(value) =>
-                      setForm((prev) => ({ ...prev, city: value ?? "" }))
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        city: event.target.value,
+                      }))
                     }
-                  >
-                    <SelectTrigger
-                      id="patient-city"
-                      className={cn("w-full", fieldClassName)}
-                    >
-                      <SelectValue placeholder="Select city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((city) => (
-                        <SelectItem key={city} value={city}>
-                          {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Enter city"
+                    className={fieldClassName}
+                    required
+                  />
                 </div>
               </div>
 

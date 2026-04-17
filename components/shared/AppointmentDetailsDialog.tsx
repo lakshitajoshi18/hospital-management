@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -20,23 +21,79 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePatientStore } from "@/store/patient.store";
+import { APPOINTMENTS } from "@/types";
 
 type AppointmentDetailsDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   // Using a loose type here to stay compatible with the
   // current API response shape from the patient store.
-  appointment: any | null;
+  appointment: APPOINTMENTS | null;
+  onEdit?: (appointment: any) => void;
 };
 
 const AppointmentDetailsDialog = ({
   open,
   onOpenChange,
   appointment,
+  onEdit,
 }: AppointmentDetailsDialogProps) => {
   const status = appointment?.status ?? false;
+  const { cancelAppointment, getAppointmentList } = usePatientStore();
+  const canEdit = appointment?.status === false;
 
+  const downloadReceipt = () => {
+    if (!appointment) return;
 
+    const receiptLines = [
+      "Appointment Receipt",
+      "====================",
+      `Appointment ID: ${appointment.id ?? "-"}`,
+      `Name: ${appointment.name ?? "-"}`,
+      `Age / Gender: ${appointment.age ?? "-"} / ${appointment.gender ?? "-"}`,
+      `Mobile: ${appointment.mobile ?? "-"}`,
+      `Hospital: ${appointment.hospital ?? "-"}`,
+      `Doctor: ${appointment.doctor ?? "-"}`,
+      `Appointment Date: ${appointment.appointmentDate ?? appointment.appointmentDate ?? "-"}`,
+      `Problem: ${appointment.problem ?? "-"}`,
+      `Status: ${appointment.status === true ? "Appointed" : "Pending"}`,
+      "",
+      "Thank you for choosing our hospital portal.",
+    ];
+
+    const blob = new Blob([receiptLines.join("\n")], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `appointment-${appointment.id ?? "receipt"}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleEdit = () => {
+    if (!appointment) return;
+    if (onEdit) {
+      onEdit(appointment);
+      return;
+    }
+
+    alert("Edit functionality is not configured yet.");
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!appointment) return;
+
+    await cancelAppointment({ id: appointment.id });
+    onOpenChange(false);
+    if (appointment.mobile) {
+      await getAppointmentList({ mobile: appointment.mobile });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,7 +106,10 @@ const AppointmentDetailsDialog = ({
                 {appointment?.name ?? "Patient details"}
               </DialogTitle>
               <DialogDescription className="text-sm text-slate-600">
-                Appointment ID: <span className="font-medium text-slate-900">{appointment?.id ?? "-"}</span>
+                Appointment ID:{" "}
+                <span className="font-medium text-slate-900">
+                  {appointment?.id ?? "-"}
+                </span>
               </DialogDescription>
             </div>
 
@@ -71,10 +131,6 @@ const AppointmentDetailsDialog = ({
                 </Badge>
               )}
             </div>
-
-            <DialogClose className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-200">
-              <X className="size-4" />
-            </DialogClose>
           </div>
         </DialogHeader>
 
@@ -89,10 +145,12 @@ const AppointmentDetailsDialog = ({
                   <div className="space-y-3 text-sm text-slate-700">
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                       <p className="text-slate-900">
-                        <span className="font-medium">Name:</span> {appointment.name ?? "-"}
+                        <span className="font-medium">Name:</span>{" "}
+                        {appointment.name ?? "-"}
                       </p>
                       <p className="mt-1 text-slate-600">
-                        <span className="font-medium">Age / Gender:</span> {appointment.age ?? "-"} / {appointment.gender ?? "-"}
+                        <span className="font-medium">Age / Gender:</span>{" "}
+                        {appointment.age ?? "-"} / {appointment.gender ?? "-"}
                       </p>
                     </div>
 
@@ -114,17 +172,23 @@ const AppointmentDetailsDialog = ({
                   <div className="space-y-3 text-sm text-slate-700">
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                       <p className="text-slate-900">
-                        <span className="font-medium">Hospital:</span> {appointment.hospital ?? "-"}
+                        <span className="font-medium">Hospital:</span>{" "}
+                        {appointment.hospital ?? "-"}
                       </p>
                       <p className="mt-1 text-slate-600">
-                        <span className="font-medium">Doctor:</span> {appointment.doctor ?? "-"}
+                        <span className="font-medium">Doctor:</span>{" "}
+                        {appointment.doctor ?? "Not Appointed yet"}
                       </p>
                     </div>
 
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                       <p className="flex items-center gap-2 text-slate-700">
                         <CalendarDays className="size-4 text-cyan-700" />
-                        <span>{appointment.appointmentDate ?? appointment.date ?? "-"}</span>
+                        <span>
+                          {appointment.appointmentDate ??
+                            appointment.appointmentDate ??
+                            "-"}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -163,6 +227,36 @@ const AppointmentDetailsDialog = ({
                   </div>
                 </section>
               )}
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  className="h-11 rounded-xl bg-cyan-700 px-5 text-white hover:bg-cyan-800"
+                  onClick={downloadReceipt}
+                >
+                  Download Receipt
+                </Button>
+                {canEdit && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-11 rounded-xl px-5 text-cyan-700 hover:bg-cyan-50"
+                      onClick={handleEdit}
+                    >
+                      Edit
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="h-11 rounded-xl px-5 text-white bg-red-500 hover:bg-red-600"
+                      onClick={handleCancelAppointment}
+                    >
+                      Cancel Appointment
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-slate-500">

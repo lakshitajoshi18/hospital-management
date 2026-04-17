@@ -114,14 +114,14 @@ export async function PATCH(
   const action = params?.action || request.nextUrl.pathname.split('/').filter(Boolean).pop() || ''
   const body = await request.json()
 
-  if (action === 'status') {
+  if (action === 'update') {
     if (!body?.id) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 })
     }
 
     await db.update(Patients).set({
-      isAppointed: body.isAppointed,
-      appointedBy: body.appointedBy ?? null,
+      appointmentDate: body.appointmentDate,
+      hospital: body.hospital,
     }).where(eq(Patients.id, Number(body.id)))
 
     return NextResponse.json({ success: true })

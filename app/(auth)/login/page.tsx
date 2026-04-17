@@ -41,7 +41,7 @@ const LoginPage = () => {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_35%),linear-gradient(180deg,#f7fcff_0%,#edf8fd_50%,#ffffff_100%)] px-4">
+        <div className="relative overflow-x-hidden flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_35%),linear-gradient(180deg,#f7fcff_0%,#edf8fd_50%,#ffffff_100%)] px-4">
             {/* decorative blobs */}
             <div className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full bg-cyan-200/45 blur-3xl" />
             <div className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full bg-sky-300/30 blur-3xl" />

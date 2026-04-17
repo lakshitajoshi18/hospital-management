@@ -55,6 +55,7 @@ export interface HospitalListItem {
     operatingHours: string
     emergencyAvailable: boolean
     description: string
+    opertaingHours: string
 }
 
 export type DOCTORTYPE = {
@@ -83,15 +84,9 @@ export type APPOINTMENTS = {
     mobile: string
     appointmentDate: string
     medicines: string | null
-    hospital: {
-        id: number
-        name: string
-    }
-    appointedBy: {
-        id: number
-        name: string
-    } | null
-    isAppointed: boolean
+    hospital: string;
+    doctor: string | null
+    status: boolean
 }
 
 export type MEDICINETYPES = {

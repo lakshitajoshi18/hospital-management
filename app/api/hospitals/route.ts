@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
         numberOfBeds: Hospitals.numberOfBeds,
         oxygenCylinders: Hospitals.oxygenCylinders,
         ventilators: Hospitals.ventilators,
+        operatingHours: Hospitals.operatingHours,
+        state: Hospitals.state,
       })
       .from(Hospitals);
 
