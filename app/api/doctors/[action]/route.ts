@@ -34,17 +34,9 @@ const normalizeAppointments = (rows: any[]) =>
       mobile: item.mobile ?? 'N/A',
       appointmentDate: item.appointmentDate ?? new Date().toISOString().split('T')[0],
       medicines: item.medicines,
-      hospital: {
-        id: item.hospital?.id ?? 0,
-        name: item.hospital?.name ?? 'Unknown Hospital',
-      },
-      appointedBy: item.appointedBy?.id
-        ? {
-          id: item.appointedBy.id,
-          name: item.appointedBy.name ?? 'Unknown Doctor',
-        }
-        : null,
-      isAppointed: item.isAppointed ?? false,
+      hospital: item.hospital ?? 'Unknown Hospital',
+      doctor: item.doctor ?? 'Not Appointed yet',
+      status: item.status ?? false,
     }))
 
 export async function GET(
@@ -113,15 +105,9 @@ export async function GET(
         mobile: Patients.mobile,
         appointmentDate: Patients.appointmentDate,
         medicines: Patients.medicines,
-        hospital: {
-          id: Hospitals.id,
-          name: Hospitals.name,
-        },
-        appointedBy: {
-          id: Doctors.id,
-          name: Doctors.name,
-        },
-        isAppointed: Patients.isAppointed,
+        hospital: Hospitals.name,
+        doctor: Doctors.name,
+        status: Patients.isAppointed,
       })
       .from(Patients)
       .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))
@@ -156,15 +142,9 @@ export async function GET(
         mobile: Patients.mobile,
         appointmentDate: Patients.appointmentDate,
         medicines: Patients.medicines,
-        hospital: {
-          id: Hospitals.id,
-          name: Hospitals.name,
-        },
-        appointedBy: {
-          id: Doctors.id,
-          name: Doctors.name,
-        },
-        isAppointed: Patients.isAppointed,
+        hospital: Hospitals.name,
+        doctor: Doctors.name,
+        status: Patients.isAppointed,
       })
       .from(Patients)
       .fullJoin(Hospitals, eq(Patients.hospital, Hospitals.id))

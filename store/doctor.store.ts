@@ -201,6 +201,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
       const response = await clientFetch<APPOINTMENTS[]>(
         `/api/doctors/appointments?doctorId=${encodeURIComponent(String(currentUser.id))}&hospitalId=${encodeURIComponent(String(currentUser.hospital.id))}&date=${encodeURIComponent(new Date().toISOString().split("T")[0])}`,
       );
+      console.log(response)
 
       set({ appointmentList: response });
     } catch (error) {
@@ -212,6 +213,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
   selectPatient: async (APPOINTMENTS) => {
     try {
       set({ selectedPatient: APPOINTMENTS });
+      console.log(APPOINTMENTS)
     } catch (error) {
       toast.error("Something went wrong");
       console.log(error);

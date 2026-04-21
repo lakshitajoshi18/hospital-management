@@ -83,7 +83,7 @@ const DashboardPage = () => {
 
   const statusCounts = appointmentList.reduce(
     (acc, appointment) => {
-      const rawStatus = (appointment).status ? "completed" : "pending";
+      const rawStatus = appointment.status ? "completed" : "pending";
 
       if (rawStatus === "completed") {
         acc.completed += 1;

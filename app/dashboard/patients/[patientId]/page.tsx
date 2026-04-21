@@ -23,14 +23,14 @@ const PatientInfo = () => {
         const syncSelectedPatient = async () => {
             if (selectedPatient?.id === patientId) return
 
-            const localPatient = (appointmentList as APPOINTMENTS[]).find((item) => item.id === patientId)
+            const localPatient = (appointmentList).find((item) => item.id === patientId)
             if (localPatient) {
                 await selectPatient(localPatient)
                 return
             }
 
             await getAppointmentList()
-            const freshPatient = (useDoctorStore.getState().appointmentList as APPOINTMENTS[]).find(
+            const freshPatient = (useDoctorStore.getState().appointmentList).find(
                 (item) => item.id === patientId
             )
             if (freshPatient) {
@@ -87,7 +87,11 @@ const PatientInfo = () => {
                 <CardHeader className='border-b bg-slate-50/70 pb-4'>
                     <div className='flex flex-col gap-2'>
                         <Badge className='w-fit bg-cyan-700 text-white hover:bg-cyan-700'>Medical Report</Badge>
-                        <CardTitle className='text-2xl tracking-tight'>{activePatient.hospital}</CardTitle>
+                        <CardTitle className='text-2xl tracking-tight'>
+                            {typeof activePatient.hospital === 'string' 
+                                ? activePatient.hospital 
+                                : activePatient.hospital || 'Hospital'}
+                        </CardTitle>
                         <CardDescription>Patient consultation note</CardDescription>
                     </div>
                 </CardHeader>
@@ -115,7 +119,9 @@ const PatientInfo = () => {
                             <div>
                                 <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>Appointed By</p>
                                 <p className='mt-1 text-sm text-slate-700'>
-                                    {activePatient.doctor || 'Doctor'}
+                                    {typeof activePatient.doctor === 'string' 
+                                        ? (activePatient.doctor || 'Doctor') 
+                                        : activePatient.doctor || 'Doctor'}
                                 </p>
                             </div>
                         </div>
