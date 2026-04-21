@@ -41,7 +41,7 @@ const TodaysAppointment = () => {
   const todaysAppointments = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase()
 
-    return (appointmentList as APPOINTMENTS[]).filter((appointment) => {
+    return (appointmentList as APPOINTMENTS[]).filter((appointment: APPOINTMENTS) => {
       const matchesGender =
         genderFilter === 'all' || appointment.gender?.toLowerCase() === genderFilter
 
@@ -55,7 +55,7 @@ const TodaysAppointment = () => {
   }, [appointmentList, searchQuery, genderFilter])
 
   const maleCount = todaysAppointments.filter(
-    (appointment) => appointment.gender?.toLowerCase() === 'male'
+    (appointment: APPOINTMENTS) => appointment.gender?.toLowerCase() === 'male'
   ).length
   const femaleCount = todaysAppointments.filter(
     (appointment) => appointment.gender?.toLowerCase() === 'female'
@@ -205,7 +205,7 @@ const TodaysAppointment = () => {
                         <TableCell className='max-w-65 truncate'>{appointment.problem}</TableCell>
                         <TableCell>{appointment.mobile}</TableCell>
                         <TableCell>{appointment.appointmentDate}</TableCell>
-                        <TableCell>{renderStatus(appointment.isAppointed)}</TableCell>
+                        <TableCell>{renderStatus(appointment.status)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -227,7 +227,7 @@ const TodaysAppointment = () => {
                           <span className='capitalize'>{appointment.gender}</span>
                         </p>
                       </div>
-                      {renderStatus(appointment.isAppointed)}
+                      {renderStatus(appointment.status)}
                     </div>
 
                     <div className='mt-3 space-y-1.5 text-sm'>

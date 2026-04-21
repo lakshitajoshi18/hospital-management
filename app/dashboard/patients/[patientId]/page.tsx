@@ -87,7 +87,7 @@ const PatientInfo = () => {
                 <CardHeader className='border-b bg-slate-50/70 pb-4'>
                     <div className='flex flex-col gap-2'>
                         <Badge className='w-fit bg-cyan-700 text-white hover:bg-cyan-700'>Medical Report</Badge>
-                        <CardTitle className='text-2xl tracking-tight'>{activePatient.hospital.name}</CardTitle>
+                        <CardTitle className='text-2xl tracking-tight'>{activePatient.hospital}</CardTitle>
                         <CardDescription>Patient consultation note</CardDescription>
                     </div>
                 </CardHeader>
@@ -115,7 +115,7 @@ const PatientInfo = () => {
                             <div>
                                 <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>Appointed By</p>
                                 <p className='mt-1 text-sm text-slate-700'>
-                                    {activePatient.appointedBy?.name || user?.name || 'Doctor'}
+                                    {activePatient.doctor || 'Doctor'}
                                 </p>
                             </div>
                         </div>
