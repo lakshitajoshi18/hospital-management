@@ -156,6 +156,7 @@ export async function GET(
           eq(Patients.isAppointed, true)
         )
       )
+    .limit(50)
 
     return NextResponse.json(normalizeAppointments(rows))
   }
