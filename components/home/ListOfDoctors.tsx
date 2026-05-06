@@ -39,7 +39,7 @@ const ListOfDoctors = () => {
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline" className="border-cyan-200 bg-white/80 px-3 py-1 text-cyan-800">
                             <ShieldCheck className="size-3.5" />
-                            10 Verified Profiles
+                            {doctorList.length} Verified Profiles
                         </Badge>
                         <Badge variant="outline" className="border-cyan-200 bg-white/80 px-3 py-1 text-cyan-800">
                             <Stethoscope className="size-3.5" />

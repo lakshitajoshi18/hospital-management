@@ -12,6 +12,8 @@ interface ADMINSTOREINTERFACE {
     getHospitalList: () => Promise<void>
     registerHospital: (input: RegisterHospitalInput) => Promise<boolean>;
     verifyDoctors: (id: number) => Promise<void>;
+    deleteDoctors: (id: number) => Promise<void>;
+
 }
 
 export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
@@ -75,6 +77,22 @@ export const AdminStore = create<ADMINSTOREINTERFACE>((set, get) => ({
         } catch (error) {
             console.log(error)
             toast.error('Unable to verify doctor')
+        }
+    },
+
+    // delete doctors
+    deleteDoctors: async (id: number) => {
+        try {
+            await clientFetch(`/api/doctors/delete`, {
+                method: 'DELETE',
+                body: JSON.stringify({ id }),
+            }).then(() => {
+                toast.success('Doctor deleted successfully')
+                get().getDoctorList()
+            })
+        } catch (error) {
+            console.log(error)
+            toast.error('Unable to delete doctor')
         }
     }
 }))

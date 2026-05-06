@@ -23,6 +23,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePatientStore } from "@/store/patient.store";
 import { APPOINTMENTS } from "@/types";
+import { generateAppointmentReceiptPDF } from "@/hooks/downloadPDF";
 
 type AppointmentDetailsDialogProps = {
   open: boolean;
@@ -45,35 +46,10 @@ const AppointmentDetailsDialog = ({
 
   const downloadReceipt = () => {
     if (!appointment) return;
-
-    const receiptLines = [
-      "Appointment Receipt",
-      "====================",
-      `Appointment ID: ${appointment.id ?? "-"}`,
-      `Name: ${appointment.name ?? "-"}`,
-      `Age / Gender: ${appointment.age ?? "-"} / ${appointment.gender ?? "-"}`,
-      `Mobile: ${appointment.mobile ?? "-"}`,
-      `Hospital: ${appointment.hospital ?? "-"}`,
-      `Doctor: ${appointment.doctor ?? "-"}`,
-      `Appointment Date: ${appointment.appointmentDate ?? appointment.appointmentDate ?? "-"}`,
-      `Problem: ${appointment.problem ?? "-"}`,
-      `Status: ${appointment.status === true ? "Appointed" : "Pending"}`,
-      "",
-      "Thank you for choosing our hospital portal.",
-    ];
-
-    const blob = new Blob([receiptLines.join("\n")], {
-      type: "text/plain;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `appointment-${appointment.id ?? "receipt"}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    generateAppointmentReceiptPDF(appointment);
   };
+
+
 
   const handleEdit = () => {
     if (!appointment) return;

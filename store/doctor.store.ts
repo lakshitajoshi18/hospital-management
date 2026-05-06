@@ -106,23 +106,16 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
       });
 
       if (response.user) {
-        const token = createDoctorToken(response.user.uid);
-        if (token) {
-          set({ token });
-          localStorage.setItem(DOCTOR_TOKEN_KEY, token);
-        }
-        const isAdminId = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(
-          ",",
-        ).includes(input.phone);
-        set({ user: response.user, isAdmin: isAdminId });
-        toast.success("Doctor Registered Successfully");
+        toast.success(
+          "Doctor Registered Successfully. Now verify you account from Admin and then Login in",
+        );
         return true;
       }
       return false;
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error(message || "Something went wrong")
-      console.log(error)
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message || "Something went wrong");
+      console.log(error);
       return false;
     }
   },
@@ -156,9 +149,9 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
       }
       return false;
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error(message || "Something went wrong")
-      console.log(error)
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message || "Something went wrong");
+      console.log(error);
       return false;
     }
   },
@@ -201,7 +194,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
       const response = await clientFetch<APPOINTMENTS[]>(
         `/api/doctors/appointments?doctorId=${encodeURIComponent(String(currentUser.id))}&hospitalId=${encodeURIComponent(String(currentUser.hospital.id))}&date=${encodeURIComponent(new Date().toISOString().split("T")[0])}`,
       );
-      console.log(response)
+      console.log(response);
 
       set({ appointmentList: response });
     } catch (error) {
@@ -213,7 +206,7 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
   selectPatient: async (APPOINTMENTS) => {
     try {
       set({ selectedPatient: APPOINTMENTS });
-      console.log(APPOINTMENTS)
+      console.log(APPOINTMENTS);
     } catch (error) {
       toast.error("Something went wrong");
       console.log(error);
@@ -233,9 +226,9 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
       });
       toast.success("Patient Appointed Successfully");
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error(message || "Something went wrong")
-      console.log(error)
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message || "Something went wrong");
+      console.log(error);
     }
   },
   // update Profile
@@ -254,9 +247,9 @@ export const useDoctorStore = create<DOCTORSTOREINTERFACE>((set, get) => ({
         toast.success("Profile Updated Successfully");
       }
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error(message || "Something went wrong")
-      console.log(error)
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message || "Something went wrong");
+      console.log(error);
     }
   },
   // get appointed Patients

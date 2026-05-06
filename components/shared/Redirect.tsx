@@ -1,16 +1,27 @@
 "use client";
 import { useDoctorStore } from "@/store/doctor.store";
-import { redirect, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import SkeletonGroup from "./SkeletonGroup";
 
 const Redirect = ({ children }: { children: React.ReactNode }) => {
   const path = usePathname();
+  const router = useRouter();
   const { user, isAdmin, checkAuth, isCheckingUser } = useDoctorStore();
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (path.includes("/login") && user) {
+      router.replace("/");
+    } else if (path.includes("/signup") && user) {
+      router.replace("/");
+    } else if (path.includes("/dashboard") && !user) {
+      router.replace("/");
+    }
+  }, [path, user, router]);
 
   if (isCheckingUser)
     return (
@@ -18,11 +29,8 @@ const Redirect = ({ children }: { children: React.ReactNode }) => {
         <SkeletonGroup />
       </div>
     );
-  if (path.includes("/login") && user) return redirect("/");
-  if (path.includes("/signup") && user) return redirect("/");
 
-  if(path.includes("/dashboard") && !user) return redirect("/login");
-  return children;
+  return <>{children}</>;
 };
 
 export default Redirect;

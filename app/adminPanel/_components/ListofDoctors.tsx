@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/card";
 import { AdminStore } from "@/store/admin.store";
 import { verify } from "crypto";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Delete, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type DoctorRecord = {
-    id: number,
+  id: number;
   uid: number;
   name: string;
   specialization: string;
@@ -33,7 +33,8 @@ type DoctorRecord = {
 };
 
 const ListofDoctors = () => {
-  const { doctorList, getDoctorList, verifyDoctors } = AdminStore();
+  const { doctorList, getDoctorList, verifyDoctors, deleteDoctors } =
+    AdminStore();
   useEffect(() => {
     doctorList.length === 0 && getDoctorList();
   }, [doctorList]);
@@ -41,100 +42,118 @@ const ListofDoctors = () => {
   const verifyDoctor = async (id: number) => {
     try {
       await verifyDoctors(id);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
-  return doctorList && (
-    <section className="space-y-4 mt-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-green-800">
-          List of Doctors
-        </h2>
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-          {doctorList.length} Doctors
-        </Badge>
-      </div>
+  const deleteDoctor = async (id: number) => {
+    try {
+      await deleteDoctors(id);
+    } catch (error) {}
+  };
 
-      {doctorList.length === 0 ? (
-        <Card className="border border-dashed border-green-300">
-          <CardContent className="py-8 text-center text-muted-foreground">
-            No doctors available.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {doctorList.map((doctor) => (
-            <Card key={doctor.id} className="border border-green-100">
-              <CardHeader>
-                <CardTitle className="text-green-800">{doctor.name}</CardTitle>
-                <CardDescription>
-                  {doctor.specialization} | {doctor.qualification}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <p>
-                    <span className="font-medium text-green-700">
-                      Experience:
-                    </span>{" "}
-                    {doctor.experience} years
-                  </p>
-                  <p>
-                    <span className="font-medium text-green-700">Phone:</span>{" "}
-                    {doctor.phone}
-                  </p>
-                  <p>
-                    <span className="font-medium text-green-700">
-                      Hospital:
-                    </span>{" "}
-                    {doctor.hospital?.name ??
-                      `Hospital #${doctor.hospital?.id}`}
-                  </p>
-                  <p>
-                    <span className="font-medium text-green-700">City:</span>{" "}
-                    {doctor.city ?? "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-green-700">
-                      Patients Appointed:
-                    </span>{" "}
-                    {doctor.patientsAppointed}
-                  </p>
-                </div>
-
-                <div>
-                  {doctor.isVerified ? (
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                      Verified
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
-                      Not Verified
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-
-              <CardFooter className="justify-end gap-2">
-                {!doctor.isVerified && (
-                  <Button
-                    size="sm"
-                    className="bg-green-600 text-white hover:bg-green-700"
-                    onClick={() => verifyDoctor(Number(doctor.id))}
-                  >
-                    <CheckCircle2 className="size-4" />
-                    Verify Doctor
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          ))}
+  return (
+    doctorList && (
+      <section className="space-y-4 mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-green-800">
+            List of Doctors
+          </h2>
+          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+            {doctorList.length} Doctors
+          </Badge>
         </div>
-      )}
-    </section>
+
+        {doctorList.length === 0 ? (
+          <Card className="border border-dashed border-green-300">
+            <CardContent className="py-8 text-center text-muted-foreground">
+              No doctors available.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {doctorList.map((doctor) => (
+              <Card key={doctor.id} className="border border-green-100">
+                <CardHeader className="relative">
+                  <CardTitle className="text-green-800">
+                    {doctor.name}
+                  </CardTitle>
+                  <CardDescription>
+                    {doctor.specialization} | {doctor.qualification}
+                  </CardDescription>
+                  {!doctor.isVerified && (
+                    <Button
+                      onClick={() => deleteDoctor(Number(doctor.id))}
+                      className="absolute right-4 top-4 z-50 cursor-pointer"
+                      variant="outline"
+                      size="icon"
+                    >
+                      <Trash className="size-4 text-red-600" />
+                    </Button>
+                  )}
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <p>
+                      <span className="font-medium text-green-700">
+                        Experience:
+                      </span>{" "}
+                      {doctor.experience} years
+                    </p>
+                    <p>
+                      <span className="font-medium text-green-700">Phone:</span>{" "}
+                      {doctor.phone}
+                    </p>
+                    <p>
+                      <span className="font-medium text-green-700">
+                        Hospital:
+                      </span>{" "}
+                      {doctor.hospital?.name ??
+                        `Hospital #${doctor.hospital?.id}`}
+                    </p>
+                    <p>
+                      <span className="font-medium text-green-700">City:</span>{" "}
+                      {doctor.city ?? "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium text-green-700">
+                        Patients Appointed:
+                      </span>{" "}
+                      {doctor.patientsAppointed}
+                    </p>
+                  </div>
+
+                  <div>
+                    {doctor.isVerified ? (
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                        Not Verified
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+
+                <CardFooter className="justify-end gap-2">
+                  {!doctor.isVerified && (
+                    <Button
+                      size="sm"
+                      className="bg-green-600 text-white hover:bg-green-700"
+                      onClick={() => verifyDoctor(Number(doctor.id))}
+                    >
+                      <CheckCircle2 className="size-4" />
+                      Verify Doctor
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+    )
   );
 };
 
